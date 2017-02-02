@@ -18,6 +18,7 @@ public class MainActivity extends Activity {
 
     private SQLiteHandler db;
     private SessionManager session;
+    private boolean fbLoggedIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +35,7 @@ public class MainActivity extends Activity {
         // session manager
         session = new SessionManager(getApplicationContext());
 
-        if (!session.isLoggedIn()) {
+        if (!session.isLoggedIn() && !fbLoggedIn) {
             logoutUser();
         }
 

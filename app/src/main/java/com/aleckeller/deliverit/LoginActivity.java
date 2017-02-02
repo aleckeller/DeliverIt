@@ -44,6 +44,7 @@ public class LoginActivity extends Activity {
     private SQLiteHandler db;
     private LoginButton fbLogin;
     private CallbackManager callbackManager;
+    private static boolean fbLoggedIn;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,12 +59,14 @@ public class LoginActivity extends Activity {
         inputPassword = (EditText) findViewById(R.id.passwordField);
         btnLogin = (Button) findViewById(R.id.loginButton);
         btnLinkToRegister = (TextView) findViewById(R.id.createAccount);
+        fbLoggedIn = false;
 
         //facebook login
         fbLogin = (LoginButton) findViewById(R.id.facebookLogin);
         fbLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                fbLoggedIn = true;
                 //go to main activity
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -239,5 +242,4 @@ public class LoginActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
-
 }
