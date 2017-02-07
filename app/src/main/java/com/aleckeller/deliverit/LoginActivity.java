@@ -24,6 +24,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
@@ -32,6 +34,7 @@ import com.facebook.login.widget.LoginButton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +51,8 @@ public class LoginActivity extends Activity {
     private LoginButton fbLogin;
     private CallbackManager callbackManager;
     private String tmpDriver;
+    private String fbEmail;
+    private String id;
 
 
     @Override
@@ -73,9 +78,38 @@ public class LoginActivity extends Activity {
         // Since user won't be in database
         //******************************************* FACEBOOK LOGIN ****************************************************************
         fbLogin = (LoginButton) findViewById(R.id.facebookLogin);
+        fbLogin.setReadPermissions(Arrays.asList(
+                "public_profile", "email", "user_birthday", "user_friends"));
+
         fbLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                //get accessToken
+
+                //get FB EMAIL
+                GraphRequest request = GraphRequest.newMeRequest(
+                        loginResult.getAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
+                            @Override
+                            public void onCompleted(
+                                    JSONObject object,
+                                    GraphResponse response) {
+                                // Application code
+                                try {
+                                    fbEmail = object.getString("email");
+                                    id = object.getString("id");
+                                    Log.v("Email = ", " " + fbEmail);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,email,gender,birthday");
+                request.setParameters(parameters);
+                request.executeAsync();
+
+
                 // Find out if they want to be a driver
                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                 builder.setTitle("Driver?")
@@ -278,9 +312,9 @@ public class LoginActivity extends Activity {
         // get facebook information
         Profile profile = Profile.getCurrentProfile();
         final String name = profile.getFirstName() + " " + profile.getLastName();
-        final String email = "alec@mail.com";
+        final String email = fbEmail;
         final String driver = tmpDriver;
-        final String password = "password";
+        final String password = id;
 
         // register facebook user
         StringRequest strReq = new StringRequest(Method.POST,
@@ -309,7 +343,7 @@ public class LoginActivity extends Activity {
                         // Inserting row in users table
                         db.addUser(name, email, driver, uid, created_at);
 
-                        Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
 
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -362,4 +396,6 @@ public class LoginActivity extends Activity {
         };
         AppController.getInstance().addToRequestQueue(strReq, "fb_register");
     }
+
+    //*********************************************** END OF FB REGISTER **********************************************************
 }
