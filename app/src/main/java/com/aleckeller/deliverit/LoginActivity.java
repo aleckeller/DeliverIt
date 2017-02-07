@@ -22,6 +22,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.Profile;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -44,7 +45,7 @@ public class LoginActivity extends Activity {
     private SQLiteHandler db;
     private LoginButton fbLogin;
     private CallbackManager callbackManager;
-    private static boolean fbLoggedIn;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,20 +60,113 @@ public class LoginActivity extends Activity {
         inputPassword = (EditText) findViewById(R.id.passwordField);
         btnLogin = (Button) findViewById(R.id.loginButton);
         btnLinkToRegister = (TextView) findViewById(R.id.createAccount);
-        fbLoggedIn = false;
 
-        //facebook login
+        // Session manager
+        session = new SessionManager(getApplicationContext());
+
+        // SQLite database handler
+        db = new SQLiteHandler(getApplicationContext());
+
+        // Since user won't be in
+        //******************************************* FACEBOOK LOGIN ****************************************************************
         fbLogin = (LoginButton) findViewById(R.id.facebookLogin);
         fbLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                fbLoggedIn = true;
-                //go to main activity
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
+                // set up alert dialog
 
+                // so when you leave app, still stay logged in
+                session.setLogin(true);
 
+                // so you know if your using facebook or regular
+                AppConfig.fbLoggedIn = true;
+
+                // get facebook information
+                Profile profile = Profile.getCurrentProfile();
+                final String name = profile.getFirstName() + " " + profile.getLastName();
+                final String email = "alec@mail.com";
+                final String driver = "FALSE";
+                final String password = "password";
+
+                // register facebook user
+                StringRequest strReq = new StringRequest(Method.POST,
+                        AppConfig.URL_REGISTER, new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "Register Response: " + response.toString());
+                        hideDialog();
+
+                        try {
+                            JSONObject jObj = new JSONObject(response);
+                            boolean error = jObj.getBoolean("error");
+                            if (!error) {
+                                // User successfully stored in MySQL
+                                // Now store the user in sqlite
+                                String uid = jObj.getString("uid");
+
+                                JSONObject user = jObj.getJSONObject("user");
+                                String name = user.getString("name");
+                                String email = user.getString("email");
+                                String driver = user.getString("driver");
+                                String created_at = user
+                                        .getString("created_at");
+
+                                // Inserting row in users table
+                                db.addUser(name, email, driver, uid, created_at);
+
+                                Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
+
+                                // Launch main activity
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                startActivity(intent);
+                                finish();
+
+                            } else {
+
+                                // Error occurred in registration. Get the error
+                                // message
+                                String errorMsg = jObj.getString("error_msg");
+                                if (errorMsg.contains("User already existed with")){
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                                else{
+                                    Toast.makeText(getApplicationContext(),
+                                            errorMsg, Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Registration Error: " + error.getMessage());
+                        Toast.makeText(getApplicationContext(),
+                                error.getMessage(), Toast.LENGTH_LONG).show();
+                        hideDialog();
+                    }
+                }) {
+
+                    @Override
+                    protected Map<String, String> getParams() {
+                        // Posting params to register url
+                        Map<String, String> params = new HashMap<String, String>();
+                        params.put("name", name);
+                        params.put("email", email);
+                        params.put("driver", driver);
+                        params.put("password", password);
+
+                        return params;
+                    }
+
+                };
+                AppController.getInstance().addToRequestQueue(strReq, "fb_register");
             }
 
             @Override
@@ -89,15 +183,11 @@ public class LoginActivity extends Activity {
             }
         });
 
+        //************************************************ END OF FACEBOOK LOGIN ****************************************************
+
         // Progress dialog
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
-
-        // SQLite database handler
-        db = new SQLiteHandler(getApplicationContext());
-
-        // Session manager
-        session = new SessionManager(getApplicationContext());
 
         // Check if user is already logged in or not
         if (session.isLoggedIn()) {

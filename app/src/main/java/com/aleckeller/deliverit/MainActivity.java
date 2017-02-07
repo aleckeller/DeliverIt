@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.facebook.Profile;
+
 public class MainActivity extends Activity {
 
     private TextView txtName;
@@ -18,7 +20,8 @@ public class MainActivity extends Activity {
 
     private SQLiteHandler db;
     private SessionManager session;
-    private boolean fbLoggedIn;
+
+    private Profile profile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,19 +38,27 @@ public class MainActivity extends Activity {
         // session manager
         session = new SessionManager(getApplicationContext());
 
-        if (!session.isLoggedIn() && !fbLoggedIn) {
+        if (!session.isLoggedIn()) {
             logoutUser();
         }
+        // if facebook login, get name from facebook
+        if (AppConfig.fbLoggedIn){
+            profile = Profile.getCurrentProfile();
+            String name = profile.getFirstName() + " " + profile.getLastName();
+            txtName.setText(name);
+        }
+        // get information from regular user
+        else{
+            // Fetching user details from sqlite
+            HashMap<String, String> user = db.getUserDetails();
 
-        // Fetching user details from sqlite
-        HashMap<String, String> user = db.getUserDetails();
+            String name = user.get("name");
+            String email = user.get("email");
 
-        String name = user.get("name");
-        String email = user.get("email");
-
-        // Displaying the user details on the screen
-        txtName.setText(name);
-        txtEmail.setText(email);
+            // Displaying the user details on the screen
+            txtName.setText(name);
+            txtEmail.setText(email);
+        }
 
         // Logout button click event
         btnLogout.setOnClickListener(new View.OnClickListener() {
@@ -65,6 +76,7 @@ public class MainActivity extends Activity {
      * */
     private void logoutUser() {
         session.setLogin(false);
+        AppConfig.fbLoggedIn = false;
 
         db.deleteUsers();
 
