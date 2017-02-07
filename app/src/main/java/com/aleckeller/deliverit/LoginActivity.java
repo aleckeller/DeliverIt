@@ -4,6 +4,8 @@ package com.aleckeller.deliverit;
  * Created by aleckeller on 1/19/17.
  */
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
@@ -45,6 +47,7 @@ public class LoginActivity extends Activity {
     private SQLiteHandler db;
     private LoginButton fbLogin;
     private CallbackManager callbackManager;
+    private String tmpDriver;
 
 
     @Override
@@ -67,106 +70,32 @@ public class LoginActivity extends Activity {
         // SQLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
-        // Since user won't be in
+        // Since user won't be in database
         //******************************************* FACEBOOK LOGIN ****************************************************************
         fbLogin = (LoginButton) findViewById(R.id.facebookLogin);
         fbLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                // set up alert dialog
-
-                // so when you leave app, still stay logged in
-                session.setLogin(true);
-
-                // so you know if your using facebook or regular
-                AppConfig.fbLoggedIn = true;
-
-                // get facebook information
-                Profile profile = Profile.getCurrentProfile();
-                final String name = profile.getFirstName() + " " + profile.getLastName();
-                final String email = "alec@mail.com";
-                final String driver = "FALSE";
-                final String password = "password";
-
-                // register facebook user
-                StringRequest strReq = new StringRequest(Method.POST,
-                        AppConfig.URL_REGISTER, new Response.Listener<String>() {
-
+                // Find out if they want to be a driver
+                AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                builder.setTitle("Driver?")
+                        .setMessage("Are you going to be a driver?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "Register Response: " + response.toString());
-                        hideDialog();
-
-                        try {
-                            JSONObject jObj = new JSONObject(response);
-                            boolean error = jObj.getBoolean("error");
-                            if (!error) {
-                                // User successfully stored in MySQL
-                                // Now store the user in sqlite
-                                String uid = jObj.getString("uid");
-
-                                JSONObject user = jObj.getJSONObject("user");
-                                String name = user.getString("name");
-                                String email = user.getString("email");
-                                String driver = user.getString("driver");
-                                String created_at = user
-                                        .getString("created_at");
-
-                                // Inserting row in users table
-                                db.addUser(name, email, driver, uid, created_at);
-
-                                Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
-
-                                // Launch main activity
-                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
-
-                            } else {
-
-                                // Error occurred in registration. Get the error
-                                // message
-                                String errorMsg = jObj.getString("error_msg");
-                                if (errorMsg.contains("User already existed with")){
-                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                }
-                                else{
-                                    Toast.makeText(getApplicationContext(),
-                                            errorMsg, Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
+                    public void onClick(DialogInterface dialog, int which) {
+                        tmpDriver = "TRUE";
+                        registerFB();
                     }
-                }, new Response.ErrorListener() {
-
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Registration Error: " + error.getMessage());
-                        Toast.makeText(getApplicationContext(),
-                                error.getMessage(), Toast.LENGTH_LONG).show();
-                        hideDialog();
+                    public void onClick(DialogInterface dialog, int which) {
+                        tmpDriver = "FALSE";
+                        registerFB();
                     }
-                }) {
-
-                    @Override
-                    protected Map<String, String> getParams() {
-                        // Posting params to register url
-                        Map<String, String> params = new HashMap<String, String>();
-                        params.put("name", name);
-                        params.put("email", email);
-                        params.put("driver", driver);
-                        params.put("password", password);
-
-                        return params;
-                    }
-
-                };
-                AppController.getInstance().addToRequestQueue(strReq, "fb_register");
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
             }
 
             @Override
@@ -185,6 +114,8 @@ public class LoginActivity extends Activity {
 
         //************************************************ END OF FACEBOOK LOGIN ****************************************************
 
+
+        //*********************************************** REGULAR USER LOGIN **********************************************************
         // Progress dialog
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
@@ -331,5 +262,104 @@ public class LoginActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    //*********************************************** END OF REGULAR USER LOGIN **********************************************************
+
+
+    //***************************************************REGISTER FB USER***************************************************************
+    private void registerFB(){
+        // so when you leave app, still stay logged in
+        session.setLogin(true);
+
+        // so you know if your using facebook or regular
+        AppConfig.fbLoggedIn = true;
+
+        // get facebook information
+        Profile profile = Profile.getCurrentProfile();
+        final String name = profile.getFirstName() + " " + profile.getLastName();
+        final String email = "alec@mail.com";
+        final String driver = tmpDriver;
+        final String password = "password";
+
+        // register facebook user
+        StringRequest strReq = new StringRequest(Method.POST,
+                AppConfig.URL_REGISTER, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Register Response: " + response.toString());
+                hideDialog();
+
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        // User successfully stored in MySQL
+                        // Now store the user in sqlite
+                        String uid = jObj.getString("uid");
+
+                        JSONObject user = jObj.getJSONObject("user");
+                        String name = user.getString("name");
+                        String email = user.getString("email");
+                        String driver = user.getString("driver");
+                        String created_at = user
+                                .getString("created_at");
+
+                        // Inserting row in users table
+                        db.addUser(name, email, driver, uid, created_at);
+
+                        Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
+
+                        // Launch main activity
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+
+                    } else {
+
+                        // Error occurred in registration. Get the error
+                        // message
+                        String errorMsg = jObj.getString("error_msg");
+                        if (errorMsg.contains("User already existed with")){
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            Toast.makeText(getApplicationContext(),
+                                    errorMsg, Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Registration Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("name", name);
+                params.put("email", email);
+                params.put("driver", driver);
+                params.put("password", password);
+
+                return params;
+            }
+
+        };
+        AppController.getInstance().addToRequestQueue(strReq, "fb_register");
     }
 }
