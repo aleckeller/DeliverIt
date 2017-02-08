@@ -53,6 +53,7 @@ public class LoginActivity extends Activity {
     private String tmpDriver;
     private String fbEmail;
     private String id;
+    private String theEmail;
 
 
     @Override
@@ -84,8 +85,6 @@ public class LoginActivity extends Activity {
         fbLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                //get accessToken
-
                 //get FB EMAIL
                 GraphRequest request = GraphRequest.newMeRequest(
                         loginResult.getAccessToken(),
@@ -98,7 +97,6 @@ public class LoginActivity extends Activity {
                                 try {
                                     fbEmail = object.getString("email");
                                     id = object.getString("id");
-                                    Log.v("Email = ", " " + fbEmail);
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
@@ -109,27 +107,37 @@ public class LoginActivity extends Activity {
                 request.setParameters(parameters);
                 request.executeAsync();
 
-
-                // Find out if they want to be a driver
-                AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                builder.setTitle("Driver?")
-                        .setMessage("Are you going to be a driver?");
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        tmpDriver = "TRUE";
-                        registerFB();
-                    }
-                });
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        tmpDriver = "FALSE";
-                        registerFB();
-                    }
-                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                HashMap<String, String> user = db.getUserDetails();
+                Profile profile = Profile.getCurrentProfile();
+                String name = profile.getFirstName() + " " + profile.getLastName();
+                //if the user does not exist in the database yet
+                if (!user.containsValue(name)) {
+                    // Find out if they want to be a driver
+                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                    builder.setTitle("Driver?")
+                            .setMessage("Are you going to be a driver?");
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            tmpDriver = "TRUE";
+                            registerFB();
+                        }
+                    });
+                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            tmpDriver = "FALSE";
+                            registerFB();
+                        }
+                    });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                else{
+                    Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
             }
 
             @Override
@@ -155,12 +163,12 @@ public class LoginActivity extends Activity {
         pDialog.setCancelable(false);
 
         // Check if user is already logged in or not
-        if (session.isLoggedIn()) {
-            // User is already logged in. Take him to main activity
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
-        }
+//        if (session.isLoggedIn()) {
+//            // User is already logged in. Take him to location activity
+//            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+//            startActivity(intent);
+//            finish();
+//        }
 
         // Login button Click Event
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -198,7 +206,7 @@ public class LoginActivity extends Activity {
 
     /**
      * function to verify login details in mysql db
-     * */
+     */
     private void checkLogin(final String email, final String password) {
         // Tag used to cancel the request
         String tag_string_req = "req_login";
@@ -237,9 +245,9 @@ public class LoginActivity extends Activity {
                         // Inserting row in users table
                         db.addUser(name, email, driver, uid, created_at);
 
-                        // Launch main activity
+                        // Launch location activity
                         Intent intent = new Intent(LoginActivity.this,
-                                MainActivity.class);
+                                LocationActivity.class);
                         startActivity(intent);
                         finish();
                     } else {
@@ -302,7 +310,7 @@ public class LoginActivity extends Activity {
 
 
     //***************************************************REGISTER FB USER***************************************************************
-    private void registerFB(){
+    private void registerFB() {
         // so when you leave app, still stay logged in
         session.setLogin(true);
 
@@ -346,7 +354,7 @@ public class LoginActivity extends Activity {
                         Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
 
                         // Launch main activity
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                         startActivity(intent);
                         finish();
 
@@ -355,12 +363,11 @@ public class LoginActivity extends Activity {
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
-                        if (errorMsg.contains("User already existed with")){
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        if (errorMsg.contains("User already existed with")) {
+                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                             startActivity(intent);
                             finish();
-                        }
-                        else{
+                        } else {
                             Toast.makeText(getApplicationContext(),
                                     errorMsg, Toast.LENGTH_LONG).show();
                         }
@@ -396,6 +403,5 @@ public class LoginActivity extends Activity {
         };
         AppController.getInstance().addToRequestQueue(strReq, "fb_register");
     }
-
     //*********************************************** END OF FB REGISTER **********************************************************
 }
