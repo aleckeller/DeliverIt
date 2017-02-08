@@ -107,6 +107,7 @@ public class LoginActivity extends Activity {
                 request.setParameters(parameters);
                 request.executeAsync();
 
+                //get the person logged in
                 HashMap<String, String> user = db.getUserDetails();
                 Profile profile = Profile.getCurrentProfile();
                 String name = profile.getFirstName() + " " + profile.getLastName();

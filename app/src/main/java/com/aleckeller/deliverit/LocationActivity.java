@@ -1,12 +1,34 @@
 package com.aleckeller.deliverit;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.facebook.Profile;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.Builder;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
 
@@ -14,31 +36,36 @@ import java.util.HashMap;
 /**
  * Created by aleckeller on 2/7/17.
  */
-public class LocationActivity extends Activity {
+public class LocationActivity extends Activity implements OnMapReadyCallback {
 
     private SQLiteHandler db;
     private SessionManager session;
     private String name;
+    private Button logoutBtn;
+    private GoogleMap mMap;
+    private GoogleApiClient mGoogleApiClient;
+    public static final String TAG = LocationActivity.class.getSimpleName();
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    private LocationRequest mLocationRequest;
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.location);
+
+        logoutBtn = (Button) findViewById(R.id.logoutBtn);
 
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
         // session manager
         session = new SessionManager(getApplicationContext());
-        if (!session.isLoggedIn()) {
-            logoutUser();
-        }
 
-        if(AppConfig.fbLoggedIn){
+        if (AppConfig.fbLoggedIn) {
             Profile profile = Profile.getCurrentProfile();
             name = profile.getFirstName() + " " + profile.getLastName();
-        }
-        else{
+        } else {
             // Fetching user details from sqlite
             HashMap<String, String> user = db.getUserDetails();
             name = user.get("name");
@@ -57,19 +84,36 @@ public class LocationActivity extends Activity {
         AlertDialog alert = builder.create();
         alert.show();
 
+
+        logoutBtn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                session.setLogin(false);
+                AppConfig.fbLoggedIn = false;
+
+                db.deleteUsers();
+
+                // Launching the login activity
+                Intent intent = new Intent(LocationActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+
+            }
+        });
+
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+
     }
 
-
-    private void logoutUser() {
-        session.setLogin(false);
-        AppConfig.fbLoggedIn = false;
-
-        db.deleteUsers();
-
-        // Launching the login activity
-        Intent intent = new Intent(LocationActivity.this, LoginActivity.class);
-        startActivity(intent);
-        finish();
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
-
 }
