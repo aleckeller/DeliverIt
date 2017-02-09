@@ -66,7 +66,7 @@ public class CreateAccountActivity extends Activity {
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
             Intent intent = new Intent(CreateAccountActivity.this,
-                    MainActivity.class);
+                    LocationActivity.class);
             startActivity(intent);
             finish();
         }

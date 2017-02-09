@@ -73,6 +73,12 @@ public class LoginActivity extends Activity {
         // Session manager
         session = new SessionManager(getApplicationContext());
 
+        if (session.isLoggedIn()){
+            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
         // SQLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
@@ -107,11 +113,11 @@ public class LoginActivity extends Activity {
                 request.setParameters(parameters);
                 request.executeAsync();
 
-                HashMap<String, String> user = db.getUserDetails();
+                //get the person logged in
                 Profile profile = Profile.getCurrentProfile();
                 String name = profile.getFirstName() + " " + profile.getLastName();
                 //if the user does not exist in the database yet
-                if (!user.containsValue(name)) {
+                if (!db.doesExist(name)) {
                     // Find out if they want to be a driver
                     AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                     builder.setTitle("Driver?")
@@ -134,6 +140,8 @@ public class LoginActivity extends Activity {
                     alert.show();
                 }
                 else{
+                    AppConfig.fbLoggedIn = true;
+                    session.setLogin(true);
                     Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                     startActivity(intent);
                     finish();
@@ -352,7 +360,7 @@ public class LoginActivity extends Activity {
                         db.addUser(name, email, driver, uid, created_at);
 
                         Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
-
+                        session.setLogin(true);
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                         startActivity(intent);
@@ -364,6 +372,7 @@ public class LoginActivity extends Activity {
                         // message
                         String errorMsg = jObj.getString("error_msg");
                         if (errorMsg.contains("User already existed with")) {
+                            session.setLogin(true);
                             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                             startActivity(intent);
                             finish();
