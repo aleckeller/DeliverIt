@@ -114,6 +114,7 @@ public class LoginActivity extends Activity {
                 request.executeAsync();
 
                 //get the person logged in
+                HashMap<String, String> user = db.getUserDetails();
                 Profile profile = Profile.getCurrentProfile();
                 String name = profile.getFirstName() + " " + profile.getLastName();
                 //if the user does not exist in the database yet
