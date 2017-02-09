@@ -1,13 +1,20 @@
 package com.aleckeller.deliverit;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.os.ResultReceiver;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.facebook.login.LoginManager;
 import com.google.android.gms.common.ConnectionResult;
@@ -39,6 +46,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
 
     private SessionManager session;
     private Button logoutBtn;
+    private Button getAddressBtn;
     private boolean mRequestLocationUpdates = false;
     private Location mLocation;
     private double latitude;
@@ -49,7 +57,40 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     private LatLng latLng;
 
     private LocationRequest mLocationRequest;
+    protected AddressResultReceiver mResultReceiver;
+    private boolean mAddressRequested;
+    private String mAddressOutput;
 
+    @SuppressLint("ParcelCreator")
+    class AddressResultReceiver extends ResultReceiver {
+        public AddressResultReceiver(Handler handler) {
+            super(handler);
+        }
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
+            displayAddressOutput();
+            // Show a toast message if an address was found.
+            if (resultCode == Constants.SUCCESS_RESULT) {
+                Log.d(TAG,"Address found");
+            }
+
+        }
+    }
+
+    private void displayAddressOutput() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
+        builder.setTitle("Location")
+                .setMessage("Your address: " + mAddressOutput);
+        builder.setPositiveButton("Begin", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +98,12 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         setContentView(R.layout.location);
 
         logoutBtn = (Button) findViewById(R.id.logoutBtn);
+        getAddressBtn = (Button) findViewById(R.id.getAddress);
 
         // session manager
         session = new SessionManager(getApplicationContext());
+
+        mResultReceiver = new AddressResultReceiver(new Handler());
 
 //        if (AppConfig.fbLoggedIn) {
 //            Profile profile = Profile.getCurrentProfile();
@@ -97,6 +141,18 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
                 startActivity(intent);
                 finish();
 
+            }
+        });
+
+        getAddressBtn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (mGoogleApiClient.isConnected() && mLocation != null) {
+                    startIntentService();
+                }
+                mAddressRequested = true;
+                setLocation();
             }
         });
 
@@ -198,6 +254,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
 
     //******************************************* END OF LOCATION INFO ***********************************************
 
+    //******************************************* CONNECTION TO GOOGLE CLIENT ***********************************************
     @Override
     public void onConnected(Bundle bundle) {
         LocationSettingsRequest.Builder build = new LocationSettingsRequest.Builder()
@@ -242,6 +299,16 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         if (mRequestLocationUpdates){
             startLocationUpdates();
         }
+        if (mLocation != null){
+            if (Geocoder.isPresent()){
+                Toast.makeText(this, "No geocoder available",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (mAddressRequested){
+                startIntentService();
+            }
+        }
 
     }
 
@@ -253,5 +320,13 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
+    }
+    //******************************************* END OF CONNECTION TO GOOGLE CLIENT ***********************************************
+
+    protected void startIntentService() {
+        Intent intent = new Intent(this, FetchAddressIntentService.class);
+        intent.putExtra(Constants.RECEIVER, mResultReceiver);
+        intent.putExtra(Constants.LOCATION_DATA_EXTRA, mLocation);
+        startService(intent);
     }
 }
