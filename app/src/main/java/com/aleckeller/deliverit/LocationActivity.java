@@ -94,6 +94,10 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         // session manager
         session = new SessionManager(getApplicationContext());
 
+        mResultReceiver = new AddressResultReceiver(new Handler());
+
+        db = new SQLiteHandler(getApplicationContext());
+
 
         logoutBtn.setOnClickListener(new View.OnClickListener() {
 
@@ -332,8 +336,8 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             name = profile.getFirstName() + " " + profile.getLastName();
         }
         else{
-            HashMap<String,String> user = db.getUserDetails();
-            name = user.get("name");
+            Intent intent = getIntent();
+            name = intent.getStringExtra("name");
         }
         return name;
     }

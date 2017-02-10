@@ -53,7 +53,6 @@ public class LoginActivity extends Activity {
     private String tmpDriver;
     private String fbEmail;
     private String id;
-    private String theEmail;
 
 
     @Override
@@ -73,17 +72,16 @@ public class LoginActivity extends Activity {
         // Session manager
         session = new SessionManager(getApplicationContext());
 
-        if (session.isLoggedIn()){
+        if (session.isLoggedIn()) {
+            session.fbSetLogin(false);
             //if regular session, set regular to true
             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-            intent.putExtra("regular",true);
             startActivity(intent);
             finish();
-        }
-        else if (session.isFBLoggedIn()){
+        } else if (session.isFBLoggedIn()) {
+            session.setLogin(false);
             //if fb session, set regular to false
             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-            intent.putExtra("regular",false);
             startActivity(intent);
             finish();
         }
@@ -147,8 +145,8 @@ public class LoginActivity extends Activity {
                     });
                     AlertDialog alert = builder.create();
                     alert.show();
-                }
-                else{
+                } else {
+                    session.setLogin(false);
                     session.fbSetLogin(true);
                     Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                     startActivity(intent);
@@ -177,14 +175,6 @@ public class LoginActivity extends Activity {
         // Progress dialog
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
-
-        // Check if user is already logged in or not
-//        if (session.isLoggedIn()) {
-//            // User is already logged in. Take him to location activity
-//            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }
 
         // Login button Click Event
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -247,7 +237,7 @@ public class LoginActivity extends Activity {
                         // user successfully logged in
                         // Create login session
                         session.setLogin(true);
-
+                        session.fbSetLogin(false);
                         // Now store the user in SQLite
                         String uid = jObj.getString("uid");
 
@@ -264,6 +254,9 @@ public class LoginActivity extends Activity {
                         // Launch location activity
                         Intent intent = new Intent(LoginActivity.this,
                                 LocationActivity.class);
+                        intent.putExtra("name", name);
+                        intent.putExtra("email", email);
+                        intent.putExtra("driver", driver);
                         startActivity(intent);
                         finish();
                     } else {
@@ -352,6 +345,7 @@ public class LoginActivity extends Activity {
                         // User successfully stored in MySQL
                         // Now store the user in sqlite
                         session.fbSetLogin(true);
+                        session.setLogin(false);
                         String uid = jObj.getString("uid");
 
                         JSONObject user = jObj.getJSONObject("user");
@@ -375,17 +369,17 @@ public class LoginActivity extends Activity {
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
-//                        if (errorMsg.contains("User already existed with")) {
-//                            session.fbSetLogin(true);
-//                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-//                            startActivity(intent);
-//                            finish();
-//                        } else {
-//                            Toast.makeText(getApplicationContext(),
-//                                    errorMsg, Toast.LENGTH_LONG).show();
-//                        }
+                        if (errorMsg.contains("User already existed with")) {
+                            session.fbSetLogin(true);
+                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(getApplicationContext(),
+                                    errorMsg, Toast.LENGTH_LONG).show();
+                        }
                         Toast.makeText(getApplicationContext(),
-                                  errorMsg, Toast.LENGTH_LONG).show();
+                                errorMsg, Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
