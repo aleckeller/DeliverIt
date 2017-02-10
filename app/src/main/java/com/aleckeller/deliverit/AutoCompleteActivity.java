@@ -81,6 +81,5 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
             mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!"));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
-
     }
 }

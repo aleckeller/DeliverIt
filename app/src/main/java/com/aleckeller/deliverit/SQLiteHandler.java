@@ -122,7 +122,18 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         cur.close();
         db.close();
         return exist;
+    }
 
+    public boolean isDriver(String name){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.rawQuery("SELECT * FROM " + TABLE_USER + " WHERE name = '" + name + "'", null);
+        int index = cur.getColumnIndex("driver");
+        String value = cur.getString(index);
+        boolean result = false;
+        if (value == "TRUE"){
+            result = true;
+        }
+        return result;
     }
 }
 
