@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -36,6 +37,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
 
 
 /**
@@ -45,7 +47,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class LocationActivity extends Activity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    private SessionManager session;
+
     private Button logoutBtn;
     private Button getAddressBtn;
     private boolean mRequestLocationUpdates = false;
@@ -56,11 +58,13 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     private GoogleApiClient mGoogleApiClient;
     public static final String TAG = LocationActivity.class.getSimpleName();
     private LatLng latLng;
+    private SQLiteHandler db;
 
     private LocationRequest mLocationRequest;
     protected AddressResultReceiver mResultReceiver;
     private boolean mAddressRequested;
     private String mAddressOutput;
+    private SessionManager session;
 
     @SuppressLint("ParcelCreator")
     class AddressResultReceiver extends ResultReceiver {
@@ -90,17 +94,18 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         // session manager
         session = new SessionManager(getApplicationContext());
 
-        mResultReceiver = new AddressResultReceiver(new Handler());
-
 
         logoutBtn.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                session.setLogin(false);
-                AppConfig.fbLoggedIn = false;
-                LoginManager.getInstance().logOut();
-                //db.deleteUsers();
+                if (session.isLoggedIn()){
+                    session.setLogin(false);
+                }
+                else{
+                    session.fbSetLogin(false);
+                    LoginManager.getInstance().logOut();
+                }
                 // Launching the login activity
                 Intent intent = new Intent(LocationActivity.this, LoginActivity.class);
                 startActivity(intent);
@@ -156,7 +161,8 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         addressBuilder.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+                Log.d(TAG,getName());
+
             }
         });
         AlertDialog alert = addressBuilder.create();
@@ -319,7 +325,17 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         startService(intent);
     }
 
-    protected void isDriver(){
-
+    private String getName(){
+        String name = "";
+        if (session.isFBLoggedIn()) {
+            Profile profile = Profile.getCurrentProfile();
+            name = profile.getFirstName() + " " + profile.getLastName();
+        }
+        else{
+            HashMap<String,String> user = db.getUserDetails();
+            name = user.get("name");
+        }
+        return name;
     }
+
 }

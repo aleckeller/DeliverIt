@@ -12,8 +12,5 @@ public class AppConfig {
     // Server user register url
     public static String URL_REGISTER = "http://" + ip_address + ":8888/deliverIt_api/register.php";
 
-    // Keep track of if facebook is logged in
-    public static boolean fbLoggedIn = false;
-
 
 }

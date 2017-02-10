@@ -74,7 +74,16 @@ public class LoginActivity extends Activity {
         session = new SessionManager(getApplicationContext());
 
         if (session.isLoggedIn()){
+            //if regular session, set regular to true
             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+            intent.putExtra("regular",true);
+            startActivity(intent);
+            finish();
+        }
+        else if (session.isFBLoggedIn()){
+            //if fb session, set regular to false
+            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+            intent.putExtra("regular",false);
             startActivity(intent);
             finish();
         }
@@ -114,7 +123,6 @@ public class LoginActivity extends Activity {
                 request.executeAsync();
 
                 //get the person logged in
-                HashMap<String, String> user = db.getUserDetails();
                 Profile profile = Profile.getCurrentProfile();
                 String name = profile.getFirstName() + " " + profile.getLastName();
                 //if the user does not exist in the database yet
@@ -141,8 +149,7 @@ public class LoginActivity extends Activity {
                     alert.show();
                 }
                 else{
-                    AppConfig.fbLoggedIn = true;
-                    session.setLogin(true);
+                    session.fbSetLogin(true);
                     Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                     startActivity(intent);
                     finish();
@@ -321,10 +328,6 @@ public class LoginActivity extends Activity {
     //***************************************************REGISTER FB USER***************************************************************
     private void registerFB() {
         // so when you leave app, still stay logged in
-        session.setLogin(true);
-
-        // so you know if your using facebook or regular
-        AppConfig.fbLoggedIn = true;
 
         // get facebook information
         Profile profile = Profile.getCurrentProfile();
@@ -348,6 +351,7 @@ public class LoginActivity extends Activity {
                     if (!error) {
                         // User successfully stored in MySQL
                         // Now store the user in sqlite
+                        session.fbSetLogin(true);
                         String uid = jObj.getString("uid");
 
                         JSONObject user = jObj.getJSONObject("user");
@@ -361,7 +365,6 @@ public class LoginActivity extends Activity {
                         db.addUser(name, email, driver, uid, created_at);
 
                         Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
-                        session.setLogin(true);
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                         startActivity(intent);
@@ -372,15 +375,17 @@ public class LoginActivity extends Activity {
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
-                        if (errorMsg.contains("User already existed with")) {
-                            session.setLogin(true);
-                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Toast.makeText(getApplicationContext(),
-                                    errorMsg, Toast.LENGTH_LONG).show();
-                        }
+//                        if (errorMsg.contains("User already existed with")) {
+//                            session.fbSetLogin(true);
+//                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+//                            startActivity(intent);
+//                            finish();
+//                        } else {
+//                            Toast.makeText(getApplicationContext(),
+//                                    errorMsg, Toast.LENGTH_LONG).show();
+//                        }
+                        Toast.makeText(getApplicationContext(),
+                                  errorMsg, Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
