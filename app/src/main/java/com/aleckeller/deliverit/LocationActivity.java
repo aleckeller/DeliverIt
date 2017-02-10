@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Color;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.facebook.login.LoginManager;
@@ -28,6 +30,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -78,20 +84,6 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         }
     }
 
-    private void displayAddressOutput() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
-        builder.setTitle("Location")
-                .setMessage("Your address: " + mAddressOutput);
-        builder.setPositiveButton("Begin", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        AlertDialog alert = builder.create();
-        alert.show();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,28 +96,6 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         session = new SessionManager(getApplicationContext());
 
         mResultReceiver = new AddressResultReceiver(new Handler());
-
-//        if (AppConfig.fbLoggedIn) {
-//            Profile profile = Profile.getCurrentProfile();
-//            name = profile.getFirstName() + " " + profile.getLastName();
-//        } else {
-//            // Fetching user details from sqlite
-//            HashMap<String, String> user = db.getUserDetails();
-//            name = user.get("name");
-//        }
-//
-//        // Welcome User
-//        AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
-//        builder.setTitle("DeliverIt")
-//                .setMessage("Welcome " + name);
-//        builder.setPositiveButton("Begin", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                dialog.dismiss();
-//            }
-//        });
-//        AlertDialog alert = builder.create();
-//        alert.show();
 
 
         logoutBtn.setOnClickListener(new View.OnClickListener() {
@@ -162,9 +132,10 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
+                    .addApi(Places.GEO_DATA_API)
+                    .addApi(Places.PLACE_DETECTION_API)
                     .build();
         }
-        createLocationRequest();
 
         // GET GOOGLE MAP
         MapFragment mapFragment = (MapFragment) getFragmentManager()
@@ -172,6 +143,29 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         mapFragment.getMapAsync(this);
 
 
+    }
+
+    private void displayAddressOutput() {
+        AlertDialog.Builder addressBuilder = new AlertDialog.Builder(LocationActivity.this);
+        addressBuilder.setTitle("Is this your address?")
+                .setMessage(mAddressOutput);
+        addressBuilder.setPositiveButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //MANUALLY ENTER ADDRESS
+                Intent intent = new Intent(LocationActivity.this, AutoCompleteActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        addressBuilder.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alert = addressBuilder.create();
+        alert.show();
     }
 
     @Override
@@ -300,7 +294,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             startLocationUpdates();
         }
         if (mLocation != null){
-            if (Geocoder.isPresent()){
+            if (!Geocoder.isPresent()){
                 Toast.makeText(this, "No geocoder available",
                         Toast.LENGTH_LONG).show();
                 return;
