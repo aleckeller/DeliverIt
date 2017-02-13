@@ -22,6 +22,7 @@
         </activity>
 
         <activity android:name=".CreateAccountActivity" android:theme="@style/AppTheme" />
+        <activity android:name=".DriverActivity" android:theme="@style/AppTheme" />
         <activity android:name=".AutoCompleteActivity" android:theme="@style/AppTheme" />
         <activity android:name=".LocationActivity" android:theme="@style/AppTheme" />
         <activity android:name=".LoginActivity" android:theme="@style/AppTheme" />

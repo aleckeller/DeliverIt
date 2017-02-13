@@ -27,6 +27,8 @@ public class SessionManager {
 
     private static final String FB_IS_LOGGEDIN = "FBisLoggedIn";
 
+    private static final String finished = "finished";
+
     public SessionManager(Context context) {
         this._context = context;
         pref = _context.getSharedPreferences(PREF_NAME, PRIVATE_MODE);
@@ -43,6 +45,16 @@ public class SessionManager {
         Log.d(TAG, " User login session modified!");
     }
 
+    public void setFinished(boolean isFinished) {
+
+        editor.putBoolean(finished, isFinished);
+
+        // commit changes
+        editor.commit();
+
+        Log.d(TAG, "Is Finished");
+    }
+
     public void fbSetLogin(boolean isLoggedIn) {
 
         editor.putBoolean(FB_IS_LOGGEDIN, isLoggedIn);
@@ -56,6 +68,9 @@ public class SessionManager {
 
     public boolean isLoggedIn() {
         return pref.getBoolean(KEY_IS_LOGGEDIN, false);
+    }
+    public boolean isFinished() {
+        return pref.getBoolean(finished, false);
     }
     }
 

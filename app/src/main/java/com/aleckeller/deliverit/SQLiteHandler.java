@@ -7,7 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class SQLiteHandler extends SQLiteOpenHelper {
 
@@ -127,13 +129,30 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public boolean isDriver(String name){
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cur = db.rawQuery("SELECT * FROM " + TABLE_USER + " WHERE name = '" + name + "'", null);
-        int index = cur.getColumnIndex("driver");
-        String value = cur.getString(index);
+        String value = "";
+        if (cur .moveToFirst()){
+            value = cur.getString(cur.getColumnIndex("driver"));
+        }
         boolean result = false;
-        if (value == "TRUE"){
+        if (value.equals("TRUE")){
             result = true;
         }
         return result;
+    }
+
+    public ArrayList<String> getUsers(){
+        String selectQuery = "SELECT  * FROM " + TABLE_USER;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        ArrayList<String> users = new ArrayList<String>();
+        if (cursor .moveToFirst()) {
+            while (cursor.isAfterLast() == false) {
+                String name = cursor.getString(cursor.getColumnIndex("driver"));
+                users.add(name);
+                cursor.moveToNext();
+            }
+        }
+        return users;
     }
 }
 

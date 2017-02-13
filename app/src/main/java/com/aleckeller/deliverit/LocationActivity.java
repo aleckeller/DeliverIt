@@ -37,6 +37,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -97,6 +98,17 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         db = new SQLiteHandler(getApplicationContext());
+
+        if (session.isFinished() && db.isDriver(getName())){
+            Intent intent = new Intent(LocationActivity.this, DriverActivity.class);
+            startActivity(intent);
+            finish();
+        }
+        else if (session.isFinished()){
+            Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
 
 
         logoutBtn.setOnClickListener(new View.OnClickListener() {
@@ -165,8 +177,20 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         addressBuilder.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Log.d(TAG,getName());
-
+                if (db.isDriver(getName())){
+                    // Start Driver Activity
+                    session.setFinished(true);
+                    Intent intent = new Intent(LocationActivity.this, DriverActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+                else{
+                    // since not driver, start main activity
+                    session.setFinished(true);
+                    Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
             }
         });
         AlertDialog alert = addressBuilder.create();
@@ -219,7 +243,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             latLng = new LatLng(latitude,longtitude);
             mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!"));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+            mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
         }
 
     }
@@ -335,7 +359,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             Profile profile = Profile.getCurrentProfile();
             name = profile.getFirstName() + " " + profile.getLastName();
         }
-        else{
+        else if (session.isLoggedIn()){
             Intent intent = getIntent();
             name = intent.getStringExtra("name");
         }

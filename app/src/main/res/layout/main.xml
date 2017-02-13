@@ -34,7 +34,7 @@
             android:textSize="13dp" />
 
         <Button
-            android:id="@+id/btnLogout"
+            android:id="@+id/mBtnLogout"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dip"
