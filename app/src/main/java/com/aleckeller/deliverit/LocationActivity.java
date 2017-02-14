@@ -58,7 +58,6 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     public static final String TAG = LocationActivity.class.getSimpleName();
-    private LatLng latLng;
     private SQLiteHandler db;
 
     private LocationRequest mLocationRequest;
@@ -66,6 +65,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     private boolean mAddressRequested;
     private String mAddressOutput;
     private SessionManager session;
+    private LatLng latlng;
 
     @SuppressLint("ParcelCreator")
     class AddressResultReceiver extends ResultReceiver {
@@ -188,6 +188,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
                     // since not driver, start main activity
                     session.setFinished(true);
                     Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+                    intent.putExtra("LatLng",latlng);
                     startActivity(intent);
                     finish();
                 }
@@ -240,9 +241,9 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             longtitude = mLocation.getLongitude();
             Log.d(TAG, "Latitude: " +String.valueOf(latitude));
             Log.d(TAG, "Longtitude: " + String.valueOf(longtitude));
-            latLng = new LatLng(latitude,longtitude);
-            mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            latlng = new LatLng(latitude,longtitude);
+            mMap.addMarker(new MarkerOptions().position(latlng).title("You are here!"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
         }
 
