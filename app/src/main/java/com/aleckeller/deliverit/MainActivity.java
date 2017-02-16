@@ -1,17 +1,20 @@
 package com.aleckeller.deliverit;
 
-import android.net.Uri;
+import android.app.ProgressDialog;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -19,7 +22,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -29,18 +31,23 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.maps.android.SphericalUtil;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final int PLACE_PICKER_REQUEST = 10;
     public static final String TAG = LocationActivity.class.getSimpleName();
     private SessionManager session;
-    private Button logoutBtn;
     private LatLng latlng;
     private double latitude;
     private double longitude;
+    private WebView webView;
+    private String menu_url;
+    private Toolbar myToolbar;
+    private ProgressDialog menuLoadDialog;
+    private ProgressDialog waitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,25 +56,15 @@ public class MainActivity extends Activity {
 
         session = new SessionManager(getApplicationContext());
 
-        logoutBtn = (Button) findViewById(R.id.mBtnLogout);
-        logoutBtn.setOnClickListener(new View.OnClickListener() {
+        webView = (WebView) findViewById(R.id.webview);
+        menu_url = "";
 
-            @Override
-            public void onClick(View v) {
-                if (session.isLoggedIn()) {
-                    session.setLogin(false);
-                } else {
-                    session.fbSetLogin(false);
-                    LoginManager.getInstance().logOut();
-                }
-                session.setFinished(false);
-                // Launching the login activity
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
+        myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-            }
-        });
+        waitDialog = ProgressDialog.show(MainActivity.this, "", "Loading...", true);
+
         Intent lastIntent = getIntent();
         latlng = lastIntent.getParcelableExtra("LatLng");
         if (latlng != null){
@@ -102,25 +99,72 @@ public class MainActivity extends Activity {
                 LatLng platlong = selectedPlace.getLatLng();
                 latitude = platlong.latitude;
                 longitude = platlong.longitude;
-                Log.d(TAG, "Lat " + String.valueOf(platlong.latitude));
-                Log.d(TAG, "Lon " +  String.valueOf(platlong.longitude));
-                doRequest();
+                doZomatoRequest(selectedPlace.getName().toString());
             }
         }
     }
 
-    private void doRequest() {
+    private void doZomatoRequest(final String placeName) {
         String tag_string_req = "zomato request";
         String uri = AppConfig.URL_ZOMATO + "lat=" + latitude + "&lon=" + longitude;
+        Log.d(TAG,"Lat" + latitude + " Lon " + longitude);
         StringRequest strReq = new StringRequest(Request.Method.GET,
                 uri, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d(TAG, "Zomato response: " + response.toString());
+                Log.d(TAG, "Zomato response: " + response);
                 try {
                     JSONObject jObj = new JSONObject(response);
                     if (!jObj.equals(null)) {
-                        Log.d(TAG, "wow");
+                        boolean notFound = true;
+                        JSONArray restArray = jObj.getJSONArray("restaurants");
+                        for (int i = 0; i < restArray.length(); i++){
+                            // get the whole object from array
+                            JSONObject restObj = restArray.getJSONObject(i);
+                            // get the restaurant object
+                            JSONObject restaurant = restObj.getJSONObject("restaurant");
+                            // get the string from the objects
+                            String name = restaurant.getString("name");
+                            if (name.equals(placeName)){
+                                notFound = false;
+                                menu_url = restaurant.getString("menu_url");
+                                if (!menu_url.equals("")) {
+                                    webView.getSettings().setJavaScriptEnabled(true);
+                                    waitDialog.dismiss();
+                                    menuLoadDialog = ProgressDialog.show(MainActivity.this, "", "Your menu is loading...", true);
+                                    webView.setWebViewClient(new WebViewClient() {
+                                        @Override
+                                        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                                            menuLoadDialog.show();
+                                        }
+
+                                        @Override
+                                        public void onPageFinished(WebView view, String url) {
+                                            menuLoadDialog.dismiss();
+                                        }
+
+                                        @Override
+                                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                            if (url.equals(menu_url)) {
+                                                view.loadUrl(url);
+                                            }
+                                            return true;
+                                        }
+                                    });
+                                    webView.loadUrl(menu_url);
+                                    break;
+                                }
+                            }
+                        }
+                        if (notFound){
+                            Toast.makeText(getApplicationContext(),
+                                    "Place selected not found in our database! " +
+                                            "Please select new location or enter special request!", Toast.LENGTH_LONG).show();
+                            Intent locIntent = new Intent(MainActivity.this, LocationActivity.class);
+                            startActivity(locIntent);
+                            finish();
+                        }
+
                     } else {
 
                         // Error occurred in registration. Get the error
@@ -157,4 +201,40 @@ public class MainActivity extends Activity {
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.logout:
+                if (session.isLoggedIn()) {
+                    session.setLogin(false);
+                } else {
+                    session.fbSetLogin(false);
+                    LoginManager.getInstance().logOut();
+                }
+                session.setFinished(false);
+                Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return true;
+            case R.id.newlocation:
+                Intent locIntent = new Intent(MainActivity.this, LocationActivity.class);
+                startActivity(locIntent);
+                finish();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+
 }

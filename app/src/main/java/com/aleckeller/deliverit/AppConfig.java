@@ -12,7 +12,7 @@ public class AppConfig {
     // Server user register url
     public static String URL_REGISTER = "http://" + ip_address + ":8888/deliverIt_api/register.php";
 
-    public static String URL_ZOMATO = "https://developers.zomato.com/api/v2.1/geocode?";
+    public static String URL_ZOMATO = "https://developers.zomato.com/api/v2.1/search?";
 
 
 }
