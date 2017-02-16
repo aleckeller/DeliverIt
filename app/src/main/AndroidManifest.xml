@@ -21,6 +21,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".CheckoutActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".CreateAccountActivity" android:theme="@style/AppTheme" />
         <activity android:name=".DriverActivity" android:theme="@style/AppTheme" />
         <activity android:name=".AutoCompleteActivity" android:theme="@style/AppTheme" />

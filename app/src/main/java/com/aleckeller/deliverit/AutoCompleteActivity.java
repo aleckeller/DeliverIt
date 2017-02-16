@@ -1,9 +1,11 @@
 package com.aleckeller.deliverit;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -45,12 +47,18 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
 
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment.setHint("Enter Address");
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
+                Toast.makeText(getApplicationContext(), "Please select place you would like to order from", Toast.LENGTH_LONG).show();
                 latLng = place.getLatLng();
                 setLocation();
+                Intent loginIntent = new Intent(AutoCompleteActivity.this, MainActivity.class);
+                loginIntent.putExtra("LatLng",latLng);
+                startActivity(loginIntent);
+                finish();
             }
 
             @Override

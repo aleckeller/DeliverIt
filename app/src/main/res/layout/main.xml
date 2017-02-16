@@ -20,15 +20,44 @@
         android:layout_height="fill_parent"
         />
     <EditText
-        android:id="@+id/editText"
-        android:layout_width="match_parent"
+        android:id="@+id/orderTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:background="#dcd6d6"
         android:hint="Enter Order Here"
-        android:minHeight="50dp">
+        android:minHeight="48dp"
+        android:layout_toLeftOf="@+id/orderAmount"
+        android:layout_toStartOf="@+id/orderAmount">
+
+        <requestFocus />
+
+    </EditText>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Order"
+        android:id="@+id/orderButton"
+        android:layout_alignBottom="@+id/orderTextView"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:background="#dcd6d6"
+        android:minWidth="100dp" />
+
+    <EditText
+        android:id="@+id/orderAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#dcd6d6"
+        android:hint="$"
+        android:minHeight="50dp"
+        android:layout_alignTop="@+id/orderButton"
+        android:layout_toLeftOf="@+id/orderButton"
+        android:layout_toStartOf="@+id/orderButton"
+        android:minWidth="100dp">
 
         <requestFocus />
 

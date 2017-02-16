@@ -15,7 +15,7 @@ public final class Constants {
             ".RESULT_DATA_KEY";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME +
             ".LOCATION_DATA_EXTRA";
-    public static final int radius = 1000;
+    public static final int radius = 5000;
 
     public static final String zomato_api_key = "067d68c1900b384b782ab3049d7c8179";
 }

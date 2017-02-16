@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "481930346960",
+    "firebase_url": "https://deliverit-158103.firebaseio.com",
+    "project_id": "deliverit-158103",
+    "storage_bucket": "deliverit-158103.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481930346960:android:e439307ca325aaf5",
+        "android_client_info": {
+          "package_name": "com.aleckeller.deliverit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "481930346960-vct39o4r3p6im5lpf5h3es2alobsfnfv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBe_ina6pzUnZvhJEwREz78YVqT--YUzl8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

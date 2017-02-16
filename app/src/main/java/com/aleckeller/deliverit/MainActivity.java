@@ -1,6 +1,7 @@
 package com.aleckeller.deliverit;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 
@@ -8,13 +9,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -48,12 +53,15 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar myToolbar;
     private ProgressDialog menuLoadDialog;
     private ProgressDialog waitDialog;
+    private EditText orderText;
+    private Button orderBtn;
+    private EditText amountText;
+    private static final int REQUEST_LEFT = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-
         session = new SessionManager(getApplicationContext());
 
         webView = (WebView) findViewById(R.id.webview);
@@ -62,6 +70,10 @@ public class MainActivity extends AppCompatActivity {
         myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        orderText = (EditText) findViewById(R.id.orderTextView);
+        amountText = (EditText) findViewById(R.id.orderAmount);
+        orderBtn = (Button) findViewById(R.id.orderButton);
 
         waitDialog = ProgressDialog.show(MainActivity.this, "", "Loading...", true);
 
@@ -84,6 +96,27 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
+        orderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String itemOrdered = String.valueOf(orderText.getText());
+                String itemAmount = String.valueOf(amountText.getText());
+                if (!itemOrdered.equals("") && !itemAmount.equals("")){
+                    showDialog("Order Item: " + itemOrdered + "\n" + "Amount: $" + itemAmount);
+                }
+                else if (!itemOrdered.equals("") && itemAmount.equals("")){
+                    Toast.makeText(getApplicationContext(),"Please enter item amount. " + "\n" +
+                            "If amount not shown, enter $0", Toast.LENGTH_LONG).show();
+                }
+                else if (itemOrdered.equals("") && !itemAmount.equals("")){
+                    Toast.makeText(getApplicationContext(),"Please enter order", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(getApplicationContext(),"You have not entered any fields!", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
     }
 
     public LatLngBounds toBounds(LatLng center, double radius) {
@@ -100,6 +133,11 @@ public class MainActivity extends AppCompatActivity {
                 latitude = platlong.latitude;
                 longitude = platlong.longitude;
                 doZomatoRequest(selectedPlace.getName().toString());
+            }
+            else if (resultCode == REQUEST_LEFT)  {
+                Intent intent = new Intent(MainActivity.this, LocationActivity.class);
+                startActivity(intent);
+                finish();
             }
         }
     }
@@ -234,6 +272,27 @@ public class MainActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
 
         }
+    }
+
+    private void showDialog(String order){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Place this order?")
+                .setMessage(order);
+        builder.setPositiveButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
 

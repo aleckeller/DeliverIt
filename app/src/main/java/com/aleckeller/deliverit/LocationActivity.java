@@ -168,6 +168,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         addressBuilder.setPositiveButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(getApplicationContext(),"Please enter address", Toast.LENGTH_LONG).show();
                 //MANUALLY ENTER ADDRESS
                 Intent intent = new Intent(LocationActivity.this, AutoCompleteActivity.class);
                 startActivity(intent);
