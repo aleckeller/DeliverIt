@@ -19,5 +19,19 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         />
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:background="#dcd6d6"
+        android:hint="Enter Order Here"
+        android:minHeight="50dp">
+
+        <requestFocus />
+
+    </EditText>
 
 </RelativeLayout>
