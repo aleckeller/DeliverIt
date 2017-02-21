@@ -1,9 +1,11 @@
 package com.aleckeller.deliverit;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -28,9 +30,6 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
     private GoogleApiClient mGoogleApiClient;
     public static final String TAG = AutoCompleteActivity.class.getSimpleName();
     private GoogleMap mMap;
-    private Location mLocation;
-    private double latitude;
-    private double longtitude;
     private LatLng latLng;
 
     @Override
@@ -47,18 +46,14 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
 
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-        autocompleteFragment.setHint("Enter Address");
+        autocompleteFragment.setHint("Address of Current Location");
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                Toast.makeText(getApplicationContext(), "Please select place you would like to order from", Toast.LENGTH_LONG).show();
                 latLng = place.getLatLng();
                 setLocation();
-                Intent loginIntent = new Intent(AutoCompleteActivity.this, MainActivity.class);
-                loginIntent.putExtra("LatLng",latLng);
-                startActivity(loginIntent);
-                finish();
+                showAlertDialog();
             }
 
             @Override
@@ -89,5 +84,22 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
             mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!"));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+    }
+
+    private void showAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(AutoCompleteActivity.this);
+        builder.setTitle("Google Places")
+                .setMessage("Please select a place you would like to order from");
+        builder.setPositiveButton("Begin", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(AutoCompleteActivity.this, MainActivity.class);
+                intent.putExtra("LatLng", latLng);
+                startActivity(intent);
+                finish();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 }

@@ -21,11 +21,12 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".SpecialRequestActivity" android:theme="@style/AppTheme" />
         <activity android:name=".CheckoutActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".CreateAccountActivity" android:theme="@style/AppTheme" />
         <activity android:name=".DriverActivity" android:theme="@style/AppTheme" />
         <activity android:name=".AutoCompleteActivity" android:theme="@style/AppTheme" />
-        <activity android:name=".LocationActivity" android:theme="@style/AppTheme" />
+        <activity android:name=".LocationActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".LoginActivity" android:theme="@style/AppTheme" />
         <service android:name=".FetchAddressIntentService" android:exported="false" />
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>

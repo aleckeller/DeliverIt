@@ -11,7 +11,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.os.ResultReceiver;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -34,6 +38,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -45,12 +50,10 @@ import java.util.HashMap;
  * Created by aleckeller on 2/7/17.
  */
 
-public class LocationActivity extends Activity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
+public class LocationActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
 
-    private Button logoutBtn;
-    private Button getAddressBtn;
     private boolean mRequestLocationUpdates = false;
     private Location mLocation;
     private double latitude;
@@ -66,6 +69,7 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
     private String mAddressOutput;
     private SessionManager session;
     private LatLng latlng;
+    private Toolbar myToolbar;
 
     @SuppressLint("ParcelCreator")
     class AddressResultReceiver extends ResultReceiver {
@@ -89,8 +93,10 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         super.onCreate(savedInstanceState);
         setContentView(R.layout.location);
 
-        logoutBtn = (Button) findViewById(R.id.logoutBtn);
-        getAddressBtn = (Button) findViewById(R.id.getAddress);
+        myToolbar = (Toolbar) findViewById(R.id.locToolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        myToolbar.getBackground().setAlpha(128);
 
         // session manager
         session = new SessionManager(getApplicationContext());
@@ -109,38 +115,6 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             startActivity(intent);
             finish();
         }
-
-
-        logoutBtn.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (session.isLoggedIn()){
-                    session.setLogin(false);
-                }
-                else{
-                    session.fbSetLogin(false);
-                    LoginManager.getInstance().logOut();
-                }
-                // Launching the login activity
-                Intent intent = new Intent(LocationActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-
-            }
-        });
-
-        getAddressBtn.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (mGoogleApiClient.isConnected() && mLocation != null) {
-                    startIntentService();
-                }
-                mAddressRequested = true;
-                setLocation();
-            }
-        });
 
         // CREATE GOOGLE API CLIENT IF IT HASN'T BEEN CREATED
         if (mGoogleApiClient == null) {
@@ -168,7 +142,6 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
         addressBuilder.setPositiveButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Toast.makeText(getApplicationContext(),"Please enter address", Toast.LENGTH_LONG).show();
                 //MANUALLY ENTER ADDRESS
                 Intent intent = new Intent(LocationActivity.this, AutoCompleteActivity.class);
                 startActivity(intent);
@@ -188,14 +161,28 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
                 else{
                     // since not driver, start main activity
                     session.setFinished(true);
-                    Intent intent = new Intent(LocationActivity.this, MainActivity.class);
-                    intent.putExtra("LatLng",latlng);
-                    startActivity(intent);
-                    finish();
+                    showAlertDialog();
                 }
             }
         });
         AlertDialog alert = addressBuilder.create();
+        alert.show();
+    }
+
+    private void showAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
+        builder.setTitle("Google Places")
+                .setMessage("Please select a place you would like to order from");
+        builder.setPositiveButton("Begin", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+                intent.putExtra("LatLng", latlng);
+                startActivity(intent);
+                finish();
+            }
+        });
+        AlertDialog alert = builder.create();
         alert.show();
     }
 
@@ -244,10 +231,14 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             Log.d(TAG, "Longtitude: " + String.valueOf(longtitude));
             latlng = new LatLng(latitude,longtitude);
             mMap.addMarker(new MarkerOptions().position(latlng).title("You are here!"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(latlng)      // Sets the center of the map to location user
+                    .zoom(17)                   // Sets the zoom
+                    .bearing(90)                // Sets the orientation of the camera to east
+                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
-
     }
     //creates location requests
     protected void createLocationRequest() {
@@ -366,6 +357,47 @@ public class LocationActivity extends Activity implements OnMapReadyCallback, Go
             name = intent.getStringExtra("name");
         }
         return name;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.logout:
+                if (session.isLoggedIn()) {
+                    session.setLogin(false);
+                } else {
+                    session.fbSetLogin(false);
+                    LoginManager.getInstance().logOut();
+                }
+                session.setFinished(false);
+                Intent loginIntent = new Intent(LocationActivity.this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return true;
+            case R.id.newlocation:
+                if (mGoogleApiClient.isConnected() && mLocation != null) {
+                    startIntentService();
+                }
+                mAddressRequested = true;
+                setLocation();
+                return true;
+            case R.id.specialRequest:
+                Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
+                startActivity(specIntent);
+                finish();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
 }

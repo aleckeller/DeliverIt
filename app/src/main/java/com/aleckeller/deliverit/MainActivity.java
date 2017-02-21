@@ -268,6 +268,11 @@ public class MainActivity extends AppCompatActivity {
                 finish();
                 return true;
 
+            case R.id.specialRequest:
+                Intent specIntent = new Intent(MainActivity.this, SpecialRequestActivity.class);
+                startActivity(specIntent);
+                finish();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
 
