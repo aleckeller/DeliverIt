@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,6 +26,7 @@ public class SpecialRequestActivity extends Activity {
     private static final int REQUEST_LEFT = 0;
     private TextView placeTextView;
     private ImageView roadImage;
+    private EditText requestTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +35,9 @@ public class SpecialRequestActivity extends Activity {
         session = new SessionManager(getApplicationContext());
         placeTextView = (TextView) findViewById(R.id.textPlace);
         roadImage = (ImageView) findViewById(R.id.roadImage);
-        roadImage.getBackground().setAlpha(100);
+        roadImage.getBackground().setAlpha(130);
+        requestTextView = (EditText) findViewById(R.id.requestTextView);
+        requestTextView.getBackground().setAlpha(130);
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
         try {
             startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
@@ -45,7 +50,7 @@ public class SpecialRequestActivity extends Activity {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Place selectedPlace = PlacePicker.getPlace(this, data);
-                placeTextView.setText("Selected Place: " + selectedPlace.getName());
+                placeTextView.setText(selectedPlace.getName());
             }
             else if (resultCode == REQUEST_LEFT)  {
                 Intent intent = new Intent(SpecialRequestActivity.this, LocationActivity.class);
@@ -55,4 +60,8 @@ public class SpecialRequestActivity extends Activity {
         }
     }
 
+    public void requestSubmit(View view) {
+
+
+    }
 }
