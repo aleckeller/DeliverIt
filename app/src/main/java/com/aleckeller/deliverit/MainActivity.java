@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText amountText;
     private static final int REQUEST_LEFT = 0;
     private String mAddressOutput;
+    private Place selectedPlace;
+    private String itemOrdered;
+    private String itemAmount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
         orderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String itemOrdered = String.valueOf(orderText.getText());
-                String itemAmount = String.valueOf(amountText.getText());
+                itemOrdered = String.valueOf(orderText.getText());
+                itemAmount = String.valueOf(amountText.getText());
                 if (!itemOrdered.equals("") && !itemAmount.equals("")){
                     showDialog("Order Item: " + itemOrdered + "\n" + "Amount: $" + itemAmount);
                 }
@@ -132,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
-                Place selectedPlace = PlacePicker.getPlace(this, data);
+                selectedPlace = PlacePicker.getPlace(this, data);
                 LatLng platlong = selectedPlace.getLatLng();
                 latitude = platlong.latitude;
                 longitude = platlong.longitude;
@@ -297,6 +300,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
+                String name = String.valueOf(selectedPlace.getName());
+                intent.putExtra("name", name);
+                intent.putExtra("itemOrdered", itemOrdered);
+                intent.putExtra("itemAmount", itemAmount);
+                intent.putExtra("userAddress", mAddressOutput);
+                Log.d(TAG, mAddressOutput);
                 startActivity(intent);
                 finish();
             }

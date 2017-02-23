@@ -191,6 +191,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(LocationActivity.this, MainActivity.class);
                 intent.putExtra("LatLng", latlng);
+                intent.putExtra("userAddress",mAddressOutput);
                 startActivity(intent);
                 finish();
             }
