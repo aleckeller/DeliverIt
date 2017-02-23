@@ -58,7 +58,7 @@
         android:layout_toLeftOf="@+id/orderButton"
         android:layout_toStartOf="@+id/orderButton"
         android:minWidth="100dp"
-        android:inputType="number">
+        android:inputType="numberDecimal">
 
         <requestFocus />
 
