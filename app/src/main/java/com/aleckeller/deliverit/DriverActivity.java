@@ -31,7 +31,7 @@ public class DriverActivity extends Activity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
-                session.setFinished(false);
+                session.setFinished(true);
                 // Launching the login activity
                 Intent intent = new Intent(DriverActivity.this, LoginActivity.class);
                 startActivity(intent);

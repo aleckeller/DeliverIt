@@ -71,6 +71,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     private SessionManager session;
     private LatLng latlng;
     private Toolbar myToolbar;
+    private boolean specialRequest;
 
     @SuppressLint("ParcelCreator")
     class AddressResultReceiver extends ResultReceiver {
@@ -80,7 +81,15 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
-            displayAddressOutput();
+            if (specialRequest){
+                Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
+                Log.d(TAG,mAddressOutput);
+                specIntent.putExtra("userAddress",mAddressOutput);
+                startActivity(specIntent);
+                finish();
+            }else{
+                displayAddressOutput();
+            }
             // Show a toast message if an address was found.
             if (resultCode == Constants.SUCCESS_RESULT) {
                 Log.d(TAG,"Address found");
@@ -106,6 +115,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
 
         db = new SQLiteHandler(getApplicationContext());
 
+        specialRequest = false;
+
         if (session.isFinished() && db.isDriver(getName())){
             Intent intent = new Intent(LocationActivity.this, DriverActivity.class);
             startActivity(intent);
@@ -113,6 +124,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         }
         else if (session.isFinished()){
             Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+            intent.putExtra("userAddress",mAddressOutput);
             startActivity(intent);
             finish();
         }
@@ -377,7 +389,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
-                session.setFinished(false);
+                session.setFinished(true);
                 Intent loginIntent = new Intent(LocationActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
                 finish();
@@ -390,9 +402,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                 setLocation();
                 return true;
             case R.id.specialRequest:
-                Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
-                startActivity(specIntent);
-                finish();
+                specialRequest = true;
+                startIntentService();
                 return true;
 
             default:

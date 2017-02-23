@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private Button orderBtn;
     private EditText amountText;
     private static final int REQUEST_LEFT = 0;
+    private String mAddressOutput;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
         amountText = (EditText) findViewById(R.id.orderAmount);
         orderBtn = (Button) findViewById(R.id.orderButton);
 
+        Intent intent = getIntent();
+        mAddressOutput = intent.getStringExtra("userAddress");
+
         waitDialog = ProgressDialog.show(MainActivity.this, "", "Loading...", true);
 
         Intent lastIntent = getIntent();
@@ -91,8 +95,8 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             session.setFinished(false);
-            Intent intent = new Intent(MainActivity.this, LocationActivity.class);
-            startActivity(intent);
+            Intent lIntent = new Intent(MainActivity.this, LocationActivity.class);
+            startActivity(lIntent);
             finish();
         }
 
@@ -257,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
-                session.setFinished(false);
+                session.setFinished(true);
                 Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
                 finish();
@@ -270,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.specialRequest:
                 Intent specIntent = new Intent(MainActivity.this, SpecialRequestActivity.class);
+                specIntent.putExtra("userAddress", mAddressOutput);
                 startActivity(specIntent);
                 finish();
                 return true;

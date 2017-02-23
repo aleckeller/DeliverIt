@@ -57,7 +57,8 @@
         android:layout_alignTop="@+id/orderButton"
         android:layout_toLeftOf="@+id/orderButton"
         android:layout_toStartOf="@+id/orderButton"
-        android:minWidth="100dp">
+        android:minWidth="100dp"
+        android:inputType="number">
 
         <requestFocus />
 

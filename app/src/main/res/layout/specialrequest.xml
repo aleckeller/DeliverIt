@@ -53,7 +53,7 @@
             android:minHeight="100dp"
             android:hint="$"
             android:maxWidth="70dp"
-            android:inputType="number" />
+            android:inputType="numberDecimal" />
 
 
         <Button

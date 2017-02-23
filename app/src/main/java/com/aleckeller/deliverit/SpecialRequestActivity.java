@@ -1,8 +1,10 @@
 package com.aleckeller.deliverit;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -43,6 +45,10 @@ public class SpecialRequestActivity extends AppCompatActivity {
     private Toolbar myToolbar;
     private Place selectedPlace;
     private EditText requestAmountView;
+    private String itemOrdered;
+    private String itemAmount;
+    private String mAddressOutput;
+    private ProgressDialog waitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +66,10 @@ public class SpecialRequestActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         myToolbar.getBackground().setAlpha(128);
+        Intent intent = getIntent();
+        mAddressOutput = intent.getStringExtra("userAddress");
+        Log.d(TAG,intent.getStringExtra("userAddress"));
+
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
         try {
             startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
@@ -75,13 +85,20 @@ public class SpecialRequestActivity extends AppCompatActivity {
                 placeTextView.setText(selectedPlace.getName());
                 String website = String.valueOf(selectedPlace.getWebsiteUri());
                 if (!website.equals("null")) {
+                    waitDialog = ProgressDialog.show(SpecialRequestActivity.this, "", "Loading Site...", true);
                     webView.setVisibility(View.VISIBLE);
                     webView.getSettings().setJavaScriptEnabled(true);
                     webView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                            waitDialog.dismiss();
                             view.loadUrl(url);
                             return true;
+                        }
+
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            waitDialog.dismiss();
                         }
                     });
                     webView.loadUrl(website);
@@ -100,6 +117,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Intent intent = new Intent(SpecialRequestActivity.this, SpecialRequestActivity.class);
+                            intent.putExtra("userAddress",mAddressOutput);
                             startActivity(intent);
                             finish();
                         }
@@ -116,8 +134,8 @@ public class SpecialRequestActivity extends AppCompatActivity {
     }
 
     public void requestSubmit(View view) {
-        String itemOrdered = String.valueOf(requestTextView.getText());
-        String itemAmount = String.valueOf(requestAmountView.getText());
+        itemOrdered = String.valueOf(requestTextView.getText());
+        itemAmount = String.valueOf(requestAmountView.getText());
         if (!itemOrdered.equals("") && !itemAmount.equals("")) {
             showDialog("Place: " + selectedPlace.getName() + "\n" +
                     "Order: " + itemOrdered + "\n" + "Amount: $" + itemAmount);
@@ -149,7 +167,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
-                session.setFinished(false);
+                session.setFinished(true);
                 Intent loginIntent = new Intent(SpecialRequestActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
                 finish();
@@ -162,6 +180,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
 
             case R.id.specialRequest:
                 Intent specIntent = new Intent(SpecialRequestActivity.this, SpecialRequestActivity.class);
+                specIntent.putExtra("userAddress", mAddressOutput);
                 startActivity(specIntent);
                 finish();
                 return true;
@@ -184,6 +203,11 @@ public class SpecialRequestActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(SpecialRequestActivity.this, CheckoutActivity.class);
+                String name = String.valueOf(selectedPlace.getName());
+                intent.putExtra("name", name);
+                intent.putExtra("itemOrdered", itemOrdered);
+                intent.putExtra("itemAmount", itemAmount);
+                intent.putExtra("userAddress", mAddressOutput);
                 startActivity(intent);
                 finish();
             }
