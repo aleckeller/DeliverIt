@@ -1,8 +1,25 @@
 package com.aleckeller.deliverit;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.StringRequest;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.google.firebase.database.DataSnapshot;
@@ -10,19 +27,35 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by aleckeller on 2/23/17.
  */
-public class FirebaseNotificationSystem {
-    private final DatabaseReference database;
+public class FirebaseNotificationSystem extends FirebaseMessagingService {
+    private DatabaseReference database;
     public static final String TAG = FirebaseNotificationSystem.class.getSimpleName();
-    private final String name;
-    private final String placeAddress;
-    private final String userAddress;
-    private final String orderItems;
-    private final String amount;
-    private final String placeName;
+    private String name;
+    private String placeAddress;
+    private String userAddress;
+    private String orderItems;
+    private String amount;
+    private String placeName;
+
+    public FirebaseNotificationSystem(){
+    }
 
     public FirebaseNotificationSystem(String name, String placeAddress, String userAddress, String orderItems, String amount, String placeName) {
         database = FirebaseDatabase.getInstance().getReference();
@@ -32,13 +65,15 @@ public class FirebaseNotificationSystem {
         this.orderItems = orderItems;
         this.amount = amount;
         this.placeName = placeName;
+        FirebaseMessaging.getInstance().subscribeToTopic("user_alec");
         listenForNotificationRequests();
     }
     private void listenForNotificationRequests(){
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Object user = dataSnapshot.getValue();
+                Post post = dataSnapshot.getValue(Post.class);
+                sendNotification(post.getDetails());
             }
 
             @Override
@@ -57,5 +92,116 @@ public class FirebaseNotificationSystem {
         database.child("User").child("userAddress").setValue(userAddress);
         database.child("User").child("orderItems").setValue(orderItems);
         database.child("User").child("placeName").setValue(placeName);
+    }
+    private void sendNotification(HashMap<String, String> details){
+        String tag_string_req = "Notification Request";
+        JSONObject notiObjFields = new JSONObject();
+        JSONObject noti = new JSONObject();
+        try {
+            notiObjFields.put("title", "this is the title");
+            notiObjFields.put("text", "this is the text");
+            noti.put("notification",notiObjFields);
+            noti.put("to", "/topics/user_alec");
+            noti.put("priority",10);
+            Log.d("BODYDYYDYY", noti.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        final String requestBody = noti.toString();
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                AppConfig.URL_NOTI, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Notification response: " + response);
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    if (!jObj.equals(null)) {
+
+                    } else {
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Content-Type"," application/json");
+                params.put("Authorization", "key=" + Constants.firebase_api_key);
+                return params;
+            }
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                try {
+                    return requestBody == null ? null : requestBody.getBytes("utf-8");
+                } catch (UnsupportedEncodingException uee) {
+                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+                    return null;
+                }
+            }
+
+
+        };
+
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+    }
+
+    @Override
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        // ...
+
+        // TODO(developer): Handle FCM messages here.
+        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
+        Log.d(TAG, "From: " + remoteMessage.getFrom());
+
+        // Check if message contains a data payload.
+        if (remoteMessage.getData().size() > 0) {
+            Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+        }
+
+        // Check if message contains a notification payload.
+        if (remoteMessage.getNotification() != null) {
+            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+            sendNotification(remoteMessage.getNotification().getBody());
+        }
+
+        // Also if you intend on generating your own notifications as a result of a received FCM
+        // message, here is where that should be initiated. See sendNotification method below.
+    }
+
+    private void sendNotification(String messageBody) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.road)
+                .setContentTitle("FCM Message")
+                .setContentText(messageBody)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 }

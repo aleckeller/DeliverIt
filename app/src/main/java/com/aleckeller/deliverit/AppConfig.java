@@ -20,5 +20,7 @@ public class AppConfig {
 
     public static String URL_ZOMATO = "https://developers.zomato.com/api/v2.1/search?";
 
+    public static String URL_NOTI = "https://fcm.googleapis.com/fcm/send";
+
 
 }

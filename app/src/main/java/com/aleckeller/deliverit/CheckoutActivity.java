@@ -112,7 +112,8 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     public void placeOrder(View view) {
-        String userName = getName();
+        HashMap<String,String> userDetails = db.getUserDetails();
+        String userName = userDetails.get("name");
         sendNotification(userName,placeAddress,userAddress,orderItems,amount,placeName);
     }
 
@@ -121,20 +122,4 @@ public class CheckoutActivity extends AppCompatActivity {
         system.writeToDatabase();
     }
 
-    public void goPayment(View view) {
-    }
-
-    private String getName(){
-        String userName = "";
-        if (session.isFBLoggedIn()) {
-            Profile profile = Profile.getCurrentProfile();
-            userName = profile.getFirstName() + " " + profile.getLastName();
-        }
-        else if (session.isLoggedIn()){
-            HashMap<String, String> details = db.getUserDetails();
-            userName = details.get("name");
-            Log.d(TAG,userName);
-        }
-        return userName;
-    }
 }

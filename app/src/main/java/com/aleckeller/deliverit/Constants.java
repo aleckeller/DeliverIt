@@ -21,5 +21,6 @@ public final class Constants {
 
     public static final String firebase_url = "https://deliverit-158103.firebaseio.com/";
 
+    public static final String firebase_api_key = "AAAAcDVJgdA:APA91bGnxfv_IERER2WPP9D4-HPS1tlIQ-ZZet626ICwHJNsSlvP5o_swmR69bW8Fltyy0wVIKTXY2o8892CH_fYvRhd0b0Ux0nMYZRguMZb90yL8KOPErpNwFTSuRarPOoZJxCeQcjT";
     public static String reg_user = "";
 }
