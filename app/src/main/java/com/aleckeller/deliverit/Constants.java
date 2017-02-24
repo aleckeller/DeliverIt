@@ -18,4 +18,8 @@ public final class Constants {
     public static final int radius = 5000;
 
     public static final String zomato_api_key = "067d68c1900b384b782ab3049d7c8179";
+
+    public static final String firebase_url = "https://deliverit-158103.firebaseio.com/";
+
+    public static String reg_user = "";
 }

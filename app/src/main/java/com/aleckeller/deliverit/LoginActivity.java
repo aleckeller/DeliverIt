@@ -7,16 +7,21 @@ package com.aleckeller.deliverit;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -31,6 +36,7 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -123,35 +129,7 @@ public class LoginActivity extends Activity {
                 //get the person logged in
                 Profile profile = Profile.getCurrentProfile();
                 String name = profile.getFirstName() + " " + profile.getLastName();
-                //if the user does not exist in the database yet
-                if (!db.doesExist(name)) {
-                    // Find out if they want to be a driver
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setTitle("Driver?")
-                            .setMessage("Are you going to be a driver?");
-                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            tmpDriver = "TRUE";
-                            registerFB();
-                        }
-                    });
-                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            tmpDriver = "FALSE";
-                            registerFB();
-                        }
-                    });
-                    AlertDialog alert = builder.create();
-                    alert.show();
-                } else {
-                    session.setLogin(false);
-                    session.fbSetLogin(true);
-                    Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
+                doesExist(name);
             }
 
             @Override
@@ -240,7 +218,6 @@ public class LoginActivity extends Activity {
                         session.fbSetLogin(false);
                         // Now store the user in SQLite
                         String uid = jObj.getString("uid");
-
                         JSONObject user = jObj.getJSONObject("user");
                         String name = user.getString("name");
                         String email = user.getString("email");
@@ -350,6 +327,7 @@ public class LoginActivity extends Activity {
 
                         JSONObject user = jObj.getJSONObject("user");
                         String name = user.getString("name");
+                        Constants.reg_user = name;
                         String email = user.getString("email");
                         String driver = user.getString("driver");
                         String created_at = user
@@ -413,4 +391,134 @@ public class LoginActivity extends Activity {
         AppController.getInstance().addToRequestQueue(strReq, "fb_register");
     }
     //*********************************************** END OF FB REGISTER **********************************************************
+
+    private void doesExist(final String name) {
+        StringRequest strReq = new StringRequest(Method.POST,
+                AppConfig.URL_EXISTS, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "isDriver Response: " + response.toString());
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        JSONObject user = jObj.getJSONObject("user");
+                        boolean exists = user.getBoolean("exists");
+                        if (exists) {
+                            isDriver(name);
+                        } else {
+                            askFBDriver();
+                        }
+                    } else {
+                        Log.d(TAG, "PHP Error");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "isDriver Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("name", name);
+                return params;
+            }
+
+        };
+        AppController.getInstance().addToRequestQueue(strReq, "isDriver");
+
+    }
+
+    private void askFBDriver() {
+        //Find out if they want to be a driver
+        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+        builder.setTitle("Driver?")
+                .setMessage("Are you going to be a driver?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                tmpDriver = "TRUE";
+                registerFB();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                tmpDriver = "FALSE";
+                registerFB();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+
+    }
+
+    private void isDriver(final String name) {
+        StringRequest strReq = new StringRequest(Method.POST,
+                AppConfig.URL_isDriver, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "isDriver Response: " + response.toString());
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        JSONObject user = jObj.getJSONObject("user");
+                        String stringDriver = user.getString("driver");
+                        if (stringDriver.equals("TRUE")) {
+                            session.setLogin(false);
+                            session.fbSetLogin(true);
+                            Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            session.setLogin(false);
+                            session.fbSetLogin(true);
+                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    } else {
+                        Log.d(TAG, "PHP Error");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "isDriver Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("name", name);
+                return params;
+            }
+
+        };
+        AppController.getInstance().addToRequestQueue(strReq, "isDriver");
+    }
+
 }

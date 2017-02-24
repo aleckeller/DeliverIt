@@ -72,6 +72,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     private LatLng latlng;
     private Toolbar myToolbar;
     private boolean specialRequest;
+    private String userName;
 
     @SuppressLint("ParcelCreator")
     class AddressResultReceiver extends ResultReceiver {
@@ -83,8 +84,9 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
             mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
             if (specialRequest){
                 Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
-                Log.d(TAG,mAddressOutput);
-                specIntent.putExtra("userAddress",mAddressOutput);
+                specIntent.putExtra("userAddress", mAddressOutput);
+                specIntent.putExtra("userName", getName());
+                Log.d(TAG,"Name:" + getName());
                 startActivity(specIntent);
                 finish();
             }else{
@@ -125,6 +127,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         else if (session.isFinished()){
             Intent intent = new Intent(LocationActivity.this, MainActivity.class);
             intent.putExtra("userAddress",mAddressOutput);
+            intent.putExtra("userName",getName());
             startActivity(intent);
             finish();
         }
@@ -192,6 +195,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                 Intent intent = new Intent(LocationActivity.this, MainActivity.class);
                 intent.putExtra("LatLng", latlng);
                 intent.putExtra("userAddress",mAddressOutput);
+                intent.putExtra("userName",getName());
                 startActivity(intent);
                 finish();
             }
@@ -366,10 +370,10 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
             Profile profile = Profile.getCurrentProfile();
             name = profile.getFirstName() + " " + profile.getLastName();
         }
-        else if (session.isLoggedIn()){
-            Intent intent = getIntent();
-            name = intent.getStringExtra("name");
+        else {
+            name = Constants.reg_user;
         }
+        Log.d(TAG, name);
         return name;
     }
 
@@ -389,7 +393,9 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                 } else {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
+
                 }
+                db.deleteUsers();
                 session.setFinished(true);
                 Intent loginIntent = new Intent(LocationActivity.this, LoginActivity.class);
                 startActivity(loginIntent);

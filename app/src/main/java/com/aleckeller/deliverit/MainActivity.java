@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
     private Place selectedPlace;
     private String itemOrdered;
     private String itemAmount;
+    private String placeAddress;
+    private String userName;
+    private SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +84,11 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         mAddressOutput = intent.getStringExtra("userAddress");
+        userName = intent.getStringExtra("userName");
 
         waitDialog = ProgressDialog.show(MainActivity.this, "", "Loading...", true);
+
+        db = new SQLiteHandler(getApplicationContext());
 
         Intent lastIntent = getIntent();
         latlng = lastIntent.getParcelableExtra("LatLng");
@@ -136,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
                 selectedPlace = PlacePicker.getPlace(this, data);
+                placeAddress = String.valueOf(selectedPlace.getAddress());
                 LatLng platlong = selectedPlace.getLatLng();
                 latitude = platlong.latitude;
                 longitude = platlong.longitude;
@@ -264,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
+                db.deleteUsers();
                 session.setFinished(true);
                 Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
@@ -278,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.specialRequest:
                 Intent specIntent = new Intent(MainActivity.this, SpecialRequestActivity.class);
                 specIntent.putExtra("userAddress", mAddressOutput);
+                specIntent.putExtra("userName",userName);
                 startActivity(specIntent);
                 finish();
                 return true;
@@ -305,6 +314,8 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("itemOrdered", itemOrdered);
                 intent.putExtra("itemAmount", itemAmount);
                 intent.putExtra("userAddress", mAddressOutput);
+                intent.putExtra("placeAddress", placeAddress);
+                intent.putExtra("userName",userName);
                 Log.d(TAG, mAddressOutput);
                 startActivity(intent);
                 finish();

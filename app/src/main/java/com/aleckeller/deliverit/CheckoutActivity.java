@@ -10,7 +10,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.facebook.Profile;
 import com.facebook.login.LoginManager;
+import com.firebase.client.Firebase;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by aleckeller on 2/16/17.
@@ -23,6 +31,12 @@ public class CheckoutActivity extends AppCompatActivity {
     private TextView amountView;
     private TextView userAddressView;
     public static final String TAG = CheckoutActivity.class.getSimpleName();
+    private String placeName;
+    private String orderItems;
+    private String amount;
+    private String userAddress;
+    private String placeAddress;
+    private SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -33,6 +47,9 @@ public class CheckoutActivity extends AppCompatActivity {
         myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+        db = new SQLiteHandler(getApplicationContext());
+
+        Firebase.setAndroidContext(this);
 
         name = (TextView) findViewById(R.id.name);
         orderItemView = (TextView) findViewById(R.id.orderItem);
@@ -40,12 +57,17 @@ public class CheckoutActivity extends AppCompatActivity {
         userAddressView = (TextView) findViewById(R.id.yourAddressView);
 
         Intent intent = getIntent();
-        name.setText(intent.getStringExtra("name"));
-        orderItemView.setText(intent.getStringExtra("itemOrdered"));
-        amountView.setText("$" + intent.getStringExtra("itemAmount"));
-        String address = intent.getStringExtra("userAddress");
-        Log.d(TAG,address);
-        userAddressView.setText(intent.getStringExtra("userAddress"));
+        placeName = intent.getStringExtra("name");
+        placeAddress = intent.getStringExtra("placeAddress");
+        orderItems = intent.getStringExtra("itemOrdered");
+        amount = intent.getStringExtra("itemAmount");
+        userAddress = intent.getStringExtra("userAddress");
+
+
+        name.setText(placeName);
+        orderItemView.setText(orderItems);
+        amountView.setText("$" + amount);
+        userAddressView.setText(userAddress);
 
     }
 
@@ -66,6 +88,7 @@ public class CheckoutActivity extends AppCompatActivity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
+                db.deleteUsers();
                 session.setFinished(true);
                 Intent loginIntent = new Intent(CheckoutActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
@@ -89,8 +112,29 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     public void placeOrder(View view) {
+        String userName = getName();
+        sendNotification(userName,placeAddress,userAddress,orderItems,amount);
+    }
+
+    private void sendNotification(String name, String placeAddress, String userAddress, String orderItems, String amount) {
+        FirebaseNotificationSystem system = new FirebaseNotificationSystem(name,placeAddress,userAddress,orderItems,amount);
+        system.writeToDatabase();
     }
 
     public void goPayment(View view) {
+    }
+
+    private String getName(){
+        String userName = "";
+        if (session.isFBLoggedIn()) {
+            Profile profile = Profile.getCurrentProfile();
+            userName = profile.getFirstName() + " " + profile.getLastName();
+        }
+        else if (session.isLoggedIn()){
+            HashMap<String, String> details = db.getUserDetails();
+            userName = details.get("name");
+            Log.d(TAG,userName);
+        }
+        return userName;
     }
 }

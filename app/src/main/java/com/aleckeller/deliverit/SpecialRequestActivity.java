@@ -49,6 +49,9 @@ public class SpecialRequestActivity extends AppCompatActivity {
     private String itemAmount;
     private String mAddressOutput;
     private ProgressDialog waitDialog;
+    private String placeAddress;
+    private String userName;
+    private SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +69,11 @@ public class SpecialRequestActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         myToolbar.getBackground().setAlpha(128);
+        db = new SQLiteHandler(getApplicationContext());
         Intent intent = getIntent();
         mAddressOutput = intent.getStringExtra("userAddress");
+        userName = intent.getStringExtra("userName");
+
         Log.d(TAG,intent.getStringExtra("userAddress"));
 
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
@@ -83,6 +89,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 selectedPlace = PlacePicker.getPlace(this, data);
                 placeTextView.setText(selectedPlace.getName());
+                placeAddress = String.valueOf(selectedPlace.getAddress());
                 String website = String.valueOf(selectedPlace.getWebsiteUri());
                 if (!website.equals("null")) {
                     waitDialog = ProgressDialog.show(SpecialRequestActivity.this, "", "Loading Site...", true);
@@ -118,6 +125,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             Intent intent = new Intent(SpecialRequestActivity.this, SpecialRequestActivity.class);
                             intent.putExtra("userAddress",mAddressOutput);
+                            intent.putExtra("userName",userName);
                             startActivity(intent);
                             finish();
                         }
@@ -163,10 +171,12 @@ public class SpecialRequestActivity extends AppCompatActivity {
             case R.id.logout:
                 if (session.isLoggedIn()) {
                     session.setLogin(false);
+                    db.deleteUsers();
                 } else {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
+                db.deleteUsers();
                 session.setFinished(true);
                 Intent loginIntent = new Intent(SpecialRequestActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
@@ -181,6 +191,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
             case R.id.specialRequest:
                 Intent specIntent = new Intent(SpecialRequestActivity.this, SpecialRequestActivity.class);
                 specIntent.putExtra("userAddress", mAddressOutput);
+                specIntent.putExtra("userName", userName);
                 startActivity(specIntent);
                 finish();
                 return true;
@@ -203,11 +214,13 @@ public class SpecialRequestActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(SpecialRequestActivity.this, CheckoutActivity.class);
-                String name = String.valueOf(selectedPlace.getName());
-                intent.putExtra("name", name);
+                String placeName = String.valueOf(selectedPlace.getName());
+                intent.putExtra("name", placeName);
                 intent.putExtra("itemOrdered", itemOrdered);
                 intent.putExtra("itemAmount", itemAmount);
                 intent.putExtra("userAddress", mAddressOutput);
+                intent.putExtra("placeAddress", placeAddress);
+                intent.putExtra("userName",userName);
                 startActivity(intent);
                 finish();
             }
