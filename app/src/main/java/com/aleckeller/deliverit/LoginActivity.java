@@ -295,115 +295,19 @@ public class LoginActivity extends Activity {
     //*********************************************** END OF REGULAR USER LOGIN **********************************************************
 
 
-    //***************************************************REGISTER FB USER***************************************************************
-    private void registerFB() {
-        // so when you leave app, still stay logged in
-
-        // get facebook information
-        Profile profile = Profile.getCurrentProfile();
-        final String name = profile.getFirstName() + " " + profile.getLastName();
-        final String email = fbEmail;
-        final String driver = tmpDriver;
-        final String password = id;
-
-        // register facebook user
-        StringRequest strReq = new StringRequest(Method.POST,
-                AppConfig.URL_REGISTER, new Response.Listener<String>() {
-
-            @Override
-            public void onResponse(String response) {
-                Log.d(TAG, "Register Response: " + response.toString());
-                hideDialog();
-
-                try {
-                    JSONObject jObj = new JSONObject(response);
-                    boolean error = jObj.getBoolean("error");
-                    if (!error) {
-                        // User successfully stored in MySQL
-                        // Now store the user in sqlite
-                        session.fbSetLogin(true);
-                        session.setLogin(false);
-                        String uid = jObj.getString("uid");
-
-                        JSONObject user = jObj.getJSONObject("user");
-                        String name = user.getString("name");
-                        Constants.reg_user = name;
-                        String email = user.getString("email");
-                        String driver = user.getString("driver");
-                        String created_at = user
-                                .getString("created_at");
-
-                        // Inserting row in users table
-                        db.addUser(name, email, driver, uid, created_at);
-
-                        Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
-                        // Launch main activity
-                        Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-                        startActivity(intent);
-                        finish();
-
-                    } else {
-
-                        // Error occurred in registration. Get the error
-                        // message
-                        String errorMsg = jObj.getString("error_msg");
-                        if (errorMsg.contains("User already existed with")) {
-                            session.fbSetLogin(true);
-                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Toast.makeText(getApplicationContext(),
-                                    errorMsg, Toast.LENGTH_LONG).show();
-                        }
-                        Toast.makeText(getApplicationContext(),
-                                errorMsg, Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Registration Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
-                hideDialog();
-            }
-        }) {
-
-            @Override
-            protected Map<String, String> getParams() {
-                // Posting params to register url
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("name", name);
-                params.put("email", email);
-                params.put("driver", driver);
-                params.put("password", password);
-
-                return params;
-            }
-
-        };
-        AppController.getInstance().addToRequestQueue(strReq, "fb_register");
-    }
-    //*********************************************** END OF FB REGISTER **********************************************************
-
     private void doesExist(final String name) {
         StringRequest strReq = new StringRequest(Method.POST,
                 AppConfig.URL_EXISTS, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d(TAG, "isDriver Response: " + response.toString());
+                Log.d(TAG, "Exists Response: " + response.toString());
                 try {
                     JSONObject jObj = new JSONObject(response);
                     boolean error = jObj.getBoolean("error");
                     if (!error) {
                         JSONObject user = jObj.getJSONObject("user");
                         boolean exists = user.getBoolean("exists");
+                        Log.d(TAG,String.valueOf(exists));
                         if (exists) {
                             isDriver(name);
                         } else {
@@ -450,14 +354,14 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 tmpDriver = "TRUE";
-                registerFB();
+                registerFB(true);
             }
         });
         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 tmpDriver = "FALSE";
-                registerFB();
+                registerFB(false);
             }
         });
         AlertDialog alert = builder.create();
@@ -520,5 +424,97 @@ public class LoginActivity extends Activity {
         };
         AppController.getInstance().addToRequestQueue(strReq, "isDriver");
     }
+
+    //***************************************************REGISTER FB USER***************************************************************
+    private void registerFB(final boolean isADriver) {
+        // get facebook information
+        Profile profile = Profile.getCurrentProfile();
+        final String name = profile.getFirstName() + " " + profile.getLastName();
+        final String email = fbEmail;
+        final String driver = tmpDriver;
+        final String password = id;
+
+        // register facebook user
+        StringRequest strReq = new StringRequest(Method.POST,
+                AppConfig.URL_REGISTER, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Register Response: " + response.toString());
+                hideDialog();
+
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        // User successfully stored in MySQL
+                        // Now store the user in sqlite
+                        session.fbSetLogin(true);
+                        session.setLogin(false);
+                        String uid = jObj.getString("uid");
+
+                        JSONObject user = jObj.getJSONObject("user");
+                        String name = user.getString("name");
+                        String email = user.getString("email");
+                        String driver = user.getString("driver");
+                        String created_at = user
+                                .getString("created_at");
+
+                        // Inserting row in users table
+                        db.addUser(name, email, driver, uid, created_at);
+
+                        Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
+                        // Launch main activity
+                        if (isADriver){
+                            Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+
+                    } else {
+
+                        // Error occurred in registration. Get the error
+                        // message
+                        String errorMsg = jObj.getString("error_msg");
+                        Toast.makeText(getApplicationContext(),
+                                errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Registration Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("name", name);
+                params.put("email", email);
+                params.put("driver", driver);
+                params.put("password", password);
+
+                return params;
+            }
+
+        };
+        AppController.getInstance().addToRequestQueue(strReq, "fb_register");
+    }
+    //*********************************************** END OF FB REGISTER **********************************************************
 
 }

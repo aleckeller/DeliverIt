@@ -12,6 +12,7 @@ public class DriverActivity extends Activity {
 
     private Button logoutBtn;
     private SessionManager session;
+    private SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +20,7 @@ public class DriverActivity extends Activity {
         setContentView(R.layout.driver);
 
         session = new SessionManager(getApplicationContext());
+        db = new SQLiteHandler(getApplicationContext());
 
         logoutBtn = (Button) findViewById(R.id.dLogOut);
         logoutBtn.setOnClickListener(new View.OnClickListener() {
@@ -31,6 +33,7 @@ public class DriverActivity extends Activity {
                     session.fbSetLogin(false);
                     LoginManager.getInstance().logOut();
                 }
+                db.deleteUsers();
                 session.setFinished(true);
                 // Launching the login activity
                 Intent intent = new Intent(DriverActivity.this, LoginActivity.class);

@@ -119,7 +119,10 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
 
         specialRequest = false;
 
-        if (session.isFinished() && db.isDriver(getName())){
+        //check if driver here
+        HashMap<String,String> user = db.getUserDetails();
+        String isDriver = user.get("driver");
+        if (session.isFinished() && isDriver.equals("true")){
             Intent intent = new Intent(LocationActivity.this, DriverActivity.class);
             startActivity(intent);
             finish();
