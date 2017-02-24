@@ -32,6 +32,7 @@ import com.facebook.FacebookException;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -60,6 +61,9 @@ public class LoginActivity extends Activity {
     private String tmpDriver;
     private String fbEmail;
     private String id;
+    private ProfileTracker mProfileTracker;
+    private Profile profile;
+    private String fbName;
 
 
     @Override
@@ -127,10 +131,25 @@ public class LoginActivity extends Activity {
                 request.setParameters(parameters);
                 request.executeAsync();
 
-                //get the person logged in
-                Profile profile = Profile.getCurrentProfile();
-                String name = profile.getFirstName() + " " + profile.getLastName();
-                doesExist(name);
+                if(Profile.getCurrentProfile() == null) {
+                    mProfileTracker = new ProfileTracker() {
+                        @Override
+                        protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+                            // profile2 is the new profile
+                            fbName = profile2.getFirstName() + " " + profile2.getLastName();
+                            doesExist(fbName);
+                            mProfileTracker.stopTracking();
+                        }
+                    };
+                    // no need to call startTracking() on mProfileTracker
+                    // because it is called by its constructor, internally.
+                }
+                else {
+                    profile = Profile.getCurrentProfile();
+                    fbName = profile.getFirstName() + " " + profile.getLastName();
+                    doesExist(fbName);
+                    Log.v("facebook - profile", profile.getFirstName());
+                }
             }
 
             @Override
@@ -187,6 +206,10 @@ public class LoginActivity extends Activity {
             }
         });
 
+    }
+
+    private void setProfile(Profile profile){
+        this.profile = profile;
     }
 
     /**

@@ -42,6 +42,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,6 +119,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         db = new SQLiteHandler(getApplicationContext());
 
         specialRequest = false;
+        FirebaseMessaging.getInstance().subscribeToTopic("user_regular");
 
         //check if driver here
         HashMap<String,String> user = db.getUserDetails();
@@ -145,6 +147,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                     .addApi(Places.PLACE_DETECTION_API)
                     .build();
         }
+        createLocationRequest();
 
         // GET GOOGLE MAP
         MapFragment mapFragment = (MapFragment) getFragmentManager()
@@ -296,7 +299,6 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     public void onConnected(Bundle bundle) {
         LocationSettingsRequest.Builder build = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
-
         build.setAlwaysShow(true);
 
         PendingResult<LocationSettingsResult> result =
@@ -304,15 +306,16 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
             @Override
             public void onResult(LocationSettingsResult result) {
-
                 // TO FIGURE OUT IF LOCATION IS TURNED ON
                 final Status status = result.getStatus();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
+                        Log.d(TAG,"SUCCESS");
                         createLocationRequest();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
+                            Log.d(TAG,"TURN ON");
                             status.startResolutionForResult(
                                     LocationActivity.this, 1000);
                         } catch (IntentSender.SendIntentException e) {
@@ -320,6 +323,7 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Log.d(TAG,"WHO KNOWS");
                         break;
                 }
             }

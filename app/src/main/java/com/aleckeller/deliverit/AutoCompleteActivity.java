@@ -31,6 +31,7 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
     public static final String TAG = AutoCompleteActivity.class.getSimpleName();
     private GoogleMap mMap;
     private LatLng latLng;
+    private String mAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,7 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
             @Override
             public void onPlaceSelected(Place place) {
                 latLng = place.getLatLng();
+                mAddress = String.valueOf(place.getAddress());
                 setLocation();
                 showAlertDialog();
             }
@@ -95,6 +97,7 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(AutoCompleteActivity.this, MainActivity.class);
                 intent.putExtra("LatLng", latLng);
+                intent.putExtra("userAddress",mAddress);
                 startActivity(intent);
                 finish();
             }

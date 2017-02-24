@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.facebook.login.LoginManager;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class DriverActivity extends Activity {
 
@@ -21,6 +22,8 @@ public class DriverActivity extends Activity {
 
         session = new SessionManager(getApplicationContext());
         db = new SQLiteHandler(getApplicationContext());
+
+        FirebaseMessaging.getInstance().subscribeToTopic("user_driver");
 
         logoutBtn = (Button) findViewById(R.id.dLogOut);
         logoutBtn.setOnClickListener(new View.OnClickListener() {

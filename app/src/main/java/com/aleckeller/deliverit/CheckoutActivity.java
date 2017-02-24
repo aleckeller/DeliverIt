@@ -37,6 +37,8 @@ public class CheckoutActivity extends AppCompatActivity {
     private String userAddress;
     private String placeAddress;
     private SQLiteHandler db;
+    private String userName;
+    private HashMap<String, String> userDetails;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -62,6 +64,8 @@ public class CheckoutActivity extends AppCompatActivity {
         orderItems = intent.getStringExtra("itemOrdered");
         amount = intent.getStringExtra("itemAmount");
         userAddress = intent.getStringExtra("userAddress");
+        userDetails = db.getUserDetails();
+        userName = userDetails.get("name");
 
 
         name.setText(placeName);
@@ -102,6 +106,8 @@ public class CheckoutActivity extends AppCompatActivity {
 
             case R.id.specialRequest:
                 Intent specIntent = new Intent(CheckoutActivity.this, SpecialRequestActivity.class);
+                specIntent.putExtra("userAddress",userAddress);
+                specIntent.putExtra("userName",userName);
                 startActivity(specIntent);
                 finish();
                 return true;
@@ -112,13 +118,16 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     public void placeOrder(View view) {
-        HashMap<String,String> userDetails = db.getUserDetails();
-        String userName = userDetails.get("name");
-        sendNotification(userName,placeAddress,userAddress,orderItems,amount,placeName);
+        String stringIsDriver = userDetails.get("driver");
+        boolean isDriver = false;
+        if (stringIsDriver.equals("TRUE")){
+            isDriver = true;
+        }
+        sendNotification(userName,placeAddress,userAddress,orderItems,amount,placeName,isDriver);
     }
 
-    private void sendNotification(String userName, String placeAddress, String userAddress, String orderItems, String amount, String placeName) {
-        FirebaseNotificationSystem system = new FirebaseNotificationSystem(userName,placeAddress,userAddress,orderItems,amount,placeName);
+    private void sendNotification(String userName, String placeAddress, String userAddress, String orderItems, String amount, String placeName, boolean isDriver) {
+        FirebaseNotificationSystem system = new FirebaseNotificationSystem(userName,placeAddress,userAddress,orderItems,amount,placeName,isDriver);
         system.writeToDatabase();
     }
 
