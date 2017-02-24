@@ -22,14 +22,16 @@ public class FirebaseNotificationSystem {
     private final String userAddress;
     private final String orderItems;
     private final String amount;
+    private final String placeName;
 
-    public FirebaseNotificationSystem(String name, String placeAddress, String userAddress, String orderItems, String amount) {
+    public FirebaseNotificationSystem(String name, String placeAddress, String userAddress, String orderItems, String amount, String placeName) {
         database = FirebaseDatabase.getInstance().getReference();
         this.name = name;
         this.placeAddress = placeAddress;
         this.userAddress = userAddress;
         this.orderItems = orderItems;
         this.amount = amount;
+        this.placeName = placeName;
         listenForNotificationRequests();
     }
     private void listenForNotificationRequests(){
@@ -37,7 +39,6 @@ public class FirebaseNotificationSystem {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Object user = dataSnapshot.getValue();
-                Log.d(TAG,user.toString());
             }
 
             @Override
@@ -50,10 +51,11 @@ public class FirebaseNotificationSystem {
         database.addValueEventListener(postListener);
     }
     public void writeToDatabase(){
-        database.child("User").child("name").setValue(name);
         database.child("User").child("placeAddress").setValue(placeAddress);
+        database.child("User").child("name").setValue(name);
+        database.child("User").child("amount").setValue(amount);
         database.child("User").child("userAddress").setValue(userAddress);
         database.child("User").child("orderItems").setValue(orderItems);
-        database.child("User").child("amount").setValue(amount);
+        database.child("User").child("placeName").setValue(placeName);
     }
 }

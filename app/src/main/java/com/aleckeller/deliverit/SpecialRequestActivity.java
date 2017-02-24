@@ -215,7 +215,7 @@ public class SpecialRequestActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(SpecialRequestActivity.this, CheckoutActivity.class);
                 String placeName = String.valueOf(selectedPlace.getName());
-                intent.putExtra("name", placeName);
+                intent.putExtra("placeName", placeName);
                 intent.putExtra("itemOrdered", itemOrdered);
                 intent.putExtra("itemAmount", itemAmount);
                 intent.putExtra("userAddress", mAddressOutput);

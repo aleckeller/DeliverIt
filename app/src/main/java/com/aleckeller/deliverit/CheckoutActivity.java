@@ -57,7 +57,7 @@ public class CheckoutActivity extends AppCompatActivity {
         userAddressView = (TextView) findViewById(R.id.yourAddressView);
 
         Intent intent = getIntent();
-        placeName = intent.getStringExtra("name");
+        placeName = intent.getStringExtra("placeName");
         placeAddress = intent.getStringExtra("placeAddress");
         orderItems = intent.getStringExtra("itemOrdered");
         amount = intent.getStringExtra("itemAmount");
@@ -113,11 +113,11 @@ public class CheckoutActivity extends AppCompatActivity {
 
     public void placeOrder(View view) {
         String userName = getName();
-        sendNotification(userName,placeAddress,userAddress,orderItems,amount);
+        sendNotification(userName,placeAddress,userAddress,orderItems,amount,placeName);
     }
 
-    private void sendNotification(String name, String placeAddress, String userAddress, String orderItems, String amount) {
-        FirebaseNotificationSystem system = new FirebaseNotificationSystem(name,placeAddress,userAddress,orderItems,amount);
+    private void sendNotification(String userName, String placeAddress, String userAddress, String orderItems, String amount, String placeName) {
+        FirebaseNotificationSystem system = new FirebaseNotificationSystem(userName,placeAddress,userAddress,orderItems,amount,placeName);
         system.writeToDatabase();
     }
 
