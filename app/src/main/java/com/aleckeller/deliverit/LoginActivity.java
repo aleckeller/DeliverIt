@@ -227,15 +227,21 @@ public class LoginActivity extends Activity {
 
                         // Inserting row in users table
                         db.addUser(name, email, driver, uid, created_at);
-
-                        // Launch location activity
-                        Intent intent = new Intent(LoginActivity.this,
-                                LocationActivity.class);
-                        intent.putExtra("name", name);
-                        intent.putExtra("email", email);
-                        intent.putExtra("driver", driver);
-                        startActivity(intent);
-                        finish();
+                        if (driver.equals("TRUE")){
+                            Intent intent = new Intent(LoginActivity.this,
+                                    DriverActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            Intent intent = new Intent(LoginActivity.this,
+                                    LocationActivity.class);
+                            intent.putExtra("name", name);
+                            intent.putExtra("email", email);
+                            intent.putExtra("driver", driver);
+                            startActivity(intent);
+                            finish();
+                        }
                     } else {
                         // Error in login. Get the error message
                         String errorMsg = jObj.getString("error_msg");
@@ -382,12 +388,14 @@ public class LoginActivity extends Activity {
                         JSONObject user = jObj.getJSONObject("user");
                         String stringDriver = user.getString("driver");
                         if (stringDriver.equals("TRUE")) {
+                            db.addUser(name, fbEmail, "true","uid", "created_at");
                             session.setLogin(false);
                             session.fbSetLogin(true);
                             Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
                             startActivity(intent);
                             finish();
                         } else {
+                            db.addUser(name, fbEmail, "false","uid", "created_at");
                             session.setLogin(false);
                             session.fbSetLogin(true);
                             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
