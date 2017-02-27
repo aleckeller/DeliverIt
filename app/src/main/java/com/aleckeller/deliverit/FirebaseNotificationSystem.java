@@ -55,7 +55,7 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
     private String placeName;
     private boolean isDriver;
     private String user;
-    private String contentTitle;
+    private String order;
 
     public FirebaseNotificationSystem(){
     }
@@ -85,8 +85,22 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Post post = dataSnapshot.getValue(Post.class);
-                sendNotification(post.getDetails());
+                for (DataSnapshot data: dataSnapshot.getChildren()){
+                    String name = (String) data.child("name").getValue();
+                    String userAddress = (String) data.child("userAddress").getValue();
+                    String placeAddress = (String) data.child("placeAddress").getValue();
+                    String placeName = (String) data.child("placeName").getValue();
+                    String orderItems = (String) data.child("orderItems").getValue();
+                    String amount = (String) data.child("amount").getValue();
+                    order = "Place Name: " + placeName + "\n" +
+                            "Place Address: " + placeAddress + "\n" +
+                            "User Name: " + name + "\n" +
+                            "User Address: " + userAddress + "\n" +
+                            "Order Items: " + orderItems + "\n" +
+                            "Amount " + amount + "\n";
+                    sendNotification(order);
+                }
+
             }
 
             @Override
@@ -98,14 +112,14 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         };
         database.addValueEventListener(postListener);
     }
-    private void sendNotification(HashMap<String, String> details){
+    private void sendNotification(String order){
         String tag_string_req = "Notification Request";
         JSONObject notiObjFields = new JSONObject();
         JSONObject noti = new JSONObject();
         try {
             if (user.equals("driver")){
                 notiObjFields.put("title", "Driver");
-                notiObjFields.put("text", "You are a driver");
+                notiObjFields.put("text", "There is a new order available!");
             }
             else{
                 notiObjFields.put("title", "Regular User");
@@ -127,9 +141,7 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
                 try {
                     JSONObject jObj = new JSONObject(response);
                     if (!jObj.equals(null)) {
-
                     } else {
-
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -196,7 +208,8 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
     }
 
     private void sendNotificationToPhone(String messageBody) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, OrderNotificationActivity.class);
+        intent.putExtra("order",order);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
@@ -204,7 +217,7 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.road)
-                .setContentTitle(contentTitle)
+                .setContentTitle("DeliverIt")
                 .setContentText(messageBody)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
@@ -219,11 +232,9 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         //if the person logged in is a driver, send to regular user
         if (isDriver){
             user = "regular";
-            contentTitle = "Notification from Driver";
         //if the person logged in is a regular user, send to drivers
         }else{
             user = "driver";
-            contentTitle = "Order from User";
         }
         //prevents async tasks
         listenForNotificationRequests();

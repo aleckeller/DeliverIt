@@ -350,6 +350,9 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
                 startIntentService();
             }
         }
+        else{
+            Log.d(TAG,"LOCATION IS NULL");
+        }
 
     }
 
@@ -411,6 +414,9 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
             case R.id.newlocation:
                 if (mGoogleApiClient.isConnected() && mLocation != null) {
                     startIntentService();
+                }
+                else{
+                    Log.d(TAG,"mLocation is null");
                 }
                 mAddressRequested = true;
                 setLocation();

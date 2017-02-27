@@ -310,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
                 String name = String.valueOf(selectedPlace.getName());
-                intent.putExtra("name", name);
+                intent.putExtra("placeName", name);
                 intent.putExtra("itemOrdered", itemOrdered);
                 intent.putExtra("itemAmount", itemAmount);
                 intent.putExtra("userAddress", mAddressOutput);
