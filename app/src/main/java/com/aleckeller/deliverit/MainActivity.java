@@ -34,6 +34,7 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONArray;
@@ -265,11 +266,14 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout:
-                if (session.isLoggedIn()) {
-                    session.setLogin(false);
-                } else {
-                    session.fbSetLogin(false);
+                if (!LoginManager.getInstance().equals(null)){
                     LoginManager.getInstance().logOut();
+                }
+                if (session.isDriverLoggedIn()){
+                    session.setDriverLogin(false);
+                }
+                else{
+                    session.setRegularLogin(false);
                 }
                 db.deleteUsers();
                 session.setFinished(true);

@@ -25,7 +25,7 @@ public class SessionManager {
 
     private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
 
-    private static final String FB_IS_LOGGEDIN = "FBisLoggedIn";
+    private static final String DRIVER_LOGGED_IN = "DriverIsLoggedIn";
 
     private static final String finished = "finished";
 
@@ -35,7 +35,7 @@ public class SessionManager {
         editor = pref.edit();
     }
 
-    public void setLogin(boolean isLoggedIn) {
+    public void setRegularLogin(boolean isLoggedIn) {
 
         editor.putBoolean(KEY_IS_LOGGEDIN, isLoggedIn);
 
@@ -55,22 +55,21 @@ public class SessionManager {
         Log.d(TAG, "Is Finished");
     }
 
-    public void fbSetLogin(boolean isLoggedIn) {
+    public void setDriverLogin(boolean isLoggedIn) {
 
-        editor.putBoolean(FB_IS_LOGGEDIN, isLoggedIn);
+        editor.putBoolean(DRIVER_LOGGED_IN, isLoggedIn);
 
         // commit changes
         editor.commit();
 
-        Log.d(TAG, "Facebook user login session modified!");
+        Log.d(TAG, " User login session modified!");
     }
-    public boolean isFBLoggedIn() { return pref.getBoolean(FB_IS_LOGGEDIN, false); }
-
     public boolean isLoggedIn() {
         return pref.getBoolean(KEY_IS_LOGGEDIN, false);
     }
     public boolean isFinished() {
         return pref.getBoolean(finished, false);
     }
+    public boolean isDriverLoggedIn() {return pref.getBoolean(DRIVER_LOGGED_IN,false);}
     }
 

@@ -7,21 +7,16 @@ package com.aleckeller.deliverit;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -38,7 +33,6 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -84,19 +78,15 @@ public class LoginActivity extends Activity {
         session = new SessionManager(getApplicationContext());
 
         if (session.isLoggedIn()) {
-            session.fbSetLogin(false);
-            //if regular session, set regular to true
-            Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
-            startActivity(intent);
-            finish();
-        } else if (session.isFBLoggedIn()) {
-            session.setLogin(false);
-            //if fb session, set regular to false
             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
             startActivity(intent);
             finish();
         }
-
+        else if (session.isDriverLoggedIn()){
+            Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
+            startActivity(intent);
+            finish();
+        }
         // SQLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
@@ -237,9 +227,6 @@ public class LoginActivity extends Activity {
                     // Check for error node in json
                     if (!error) {
                         // user successfully logged in
-                        // Create login session
-                        session.setLogin(true);
-                        session.fbSetLogin(false);
                         // Now store the user in SQLite
                         String uid = jObj.getString("uid");
                         JSONObject user = jObj.getJSONObject("user");
@@ -254,12 +241,16 @@ public class LoginActivity extends Activity {
                         if (driver.equals("TRUE")){
                             Intent intent = new Intent(LoginActivity.this,
                                     DriverActivity.class);
+                            session.setDriverLogin(true);
+                            session.setRegularLogin(false);
                             startActivity(intent);
                             finish();
                         }
                         else{
                             Intent intent = new Intent(LoginActivity.this,
                                     LocationActivity.class);
+                            session.setRegularLogin(true);
+                            session.setDriverLogin(false);
                             intent.putExtra("name", name);
                             intent.putExtra("email", email);
                             intent.putExtra("driver", driver);
@@ -412,16 +403,17 @@ public class LoginActivity extends Activity {
                         JSONObject user = jObj.getJSONObject("user");
                         String stringDriver = user.getString("driver");
                         if (stringDriver.equals("TRUE")) {
-                            db.addUser(name, fbEmail, "true","uid", "created_at");
-                            session.setLogin(false);
-                            session.fbSetLogin(true);
+                            db.addUser(name, fbEmail, "true", "uid", "created_at");
+                            session.setRegularLogin(false);
+                            session.setDriverLogin(true);
                             Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
+                            session.setDriverLogin(true);
                             startActivity(intent);
                             finish();
                         } else {
                             db.addUser(name, fbEmail, "false","uid", "created_at");
-                            session.setLogin(false);
-                            session.fbSetLogin(true);
+                            session.setDriverLogin(false);
+                            session.setRegularLogin(true);
                             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                             startActivity(intent);
                             finish();
@@ -481,8 +473,6 @@ public class LoginActivity extends Activity {
                     if (!error) {
                         // User successfully stored in MySQL
                         // Now store the user in sqlite
-                        session.fbSetLogin(true);
-                        session.setLogin(false);
                         String uid = jObj.getString("uid");
 
                         JSONObject user = jObj.getJSONObject("user");
@@ -498,11 +488,15 @@ public class LoginActivity extends Activity {
                         Toast.makeText(getApplicationContext(), "User successfully registered", Toast.LENGTH_LONG).show();
                         // Launch main activity
                         if (isADriver){
+                            session.setDriverLogin(true);
+                            session.setRegularLogin(false);
                             Intent intent = new Intent(LoginActivity.this, DriverActivity.class);
                             startActivity(intent);
                             finish();
                         }
                         else{
+                            session.setRegularLogin(true);
+                            session.setDriverLogin(false);
                             Intent intent = new Intent(LoginActivity.this, LocationActivity.class);
                             startActivity(intent);
                             finish();

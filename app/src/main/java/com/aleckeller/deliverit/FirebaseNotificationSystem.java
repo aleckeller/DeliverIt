@@ -2,17 +2,12 @@ package com.aleckeller.deliverit;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -20,20 +15,14 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdService;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,6 +58,7 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         this.amount = amount;
         this.placeName = placeName;
         this.isDriver = isDriver;
+        this.order = "";
         setUser();
     }
 
@@ -97,8 +87,8 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
                             "User Name: " + name + "\n" +
                             "User Address: " + userAddress + "\n" +
                             "Order Items: " + orderItems + "\n" +
-                            "Amount " + amount + "\n";
-                    sendNotification(order);
+                            "Amount " + amount;
+                    sendNotification();
                 }
 
             }
@@ -112,14 +102,14 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         };
         database.addValueEventListener(postListener);
     }
-    private void sendNotification(String order){
+    private void sendNotification(){
         String tag_string_req = "Notification Request";
         JSONObject notiObjFields = new JSONObject();
         JSONObject noti = new JSONObject();
         try {
             if (user.equals("driver")){
                 notiObjFields.put("title", "Driver");
-                notiObjFields.put("text", "There is a new order available!");
+                notiObjFields.put("text", "There is a new order available!" + "\n" + "\n" + order);
             }
             else{
                 notiObjFields.put("title", "Regular User");
@@ -209,7 +199,7 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
 
     private void sendNotificationToPhone(String messageBody) {
         Intent intent = new Intent(this, OrderNotificationActivity.class);
-        intent.putExtra("order",order);
+        intent.putExtra("order",messageBody);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
@@ -239,4 +229,5 @@ public class FirebaseNotificationSystem extends FirebaseMessagingService {
         //prevents async tasks
         listenForNotificationRequests();
     }
+
 }

@@ -4,21 +4,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.firebase.client.Firebase;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by aleckeller on 2/16/17.
@@ -86,11 +81,14 @@ public class CheckoutActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout:
-                if (session.isLoggedIn()) {
-                    session.setLogin(false);
-                } else {
-                    session.fbSetLogin(false);
+                if (!LoginManager.getInstance().equals(null)){
                     LoginManager.getInstance().logOut();
+                }
+                if (session.isDriverLoggedIn()){
+                    session.setDriverLogin(false);
+                }
+                else{
+                    session.setRegularLogin(false);
                 }
                 db.deleteUsers();
                 session.setFinished(true);

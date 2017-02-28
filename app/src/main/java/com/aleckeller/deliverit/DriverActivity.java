@@ -22,7 +22,6 @@ public class DriverActivity extends Activity {
 
         session = new SessionManager(getApplicationContext());
         db = new SQLiteHandler(getApplicationContext());
-
         FirebaseMessaging.getInstance().subscribeToTopic("user_driver");
 
         logoutBtn = (Button) findViewById(R.id.dLogOut);
@@ -30,12 +29,16 @@ public class DriverActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                if (session.isLoggedIn()) {
-                    session.setLogin(false);
-                } else {
-                    session.fbSetLogin(false);
+                if (!LoginManager.getInstance().equals(null)){
                     LoginManager.getInstance().logOut();
                 }
+                if (session.isDriverLoggedIn()){
+                    session.setDriverLogin(false);
+                }
+                else{
+                    session.setRegularLogin(false);
+                }
+                FirebaseMessaging.getInstance().unsubscribeFromTopic("user_driver");
                 db.deleteUsers();
                 session.setFinished(true);
                 // Launching the login activity

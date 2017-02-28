@@ -1,8 +1,6 @@
 package com.aleckeller.deliverit;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -17,8 +15,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.facebook.Profile;
@@ -44,7 +40,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -119,7 +114,6 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         db = new SQLiteHandler(getApplicationContext());
 
         specialRequest = false;
-        FirebaseMessaging.getInstance().subscribeToTopic("user_regular");
 
         //check if driver here
         HashMap<String,String> user = db.getUserDetails();
@@ -375,16 +369,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     private String getName(){
-        String name = "";
-        if (session.isFBLoggedIn()) {
-            Profile profile = Profile.getCurrentProfile();
-            name = profile.getFirstName() + " " + profile.getLastName();
-        }
-        else {
-            name = Constants.reg_user;
-        }
-        Log.d(TAG, name);
-        return name;
+        HashMap<String,String> user = db.getUserDetails();
+        return user.get("name");
     }
 
     @Override
@@ -398,12 +384,14 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout:
-                if (session.isLoggedIn()) {
-                    session.setLogin(false);
-                } else {
-                    session.fbSetLogin(false);
+                if (!LoginManager.getInstance().equals(null)){
                     LoginManager.getInstance().logOut();
-
+                }
+                if (session.isDriverLoggedIn()){
+                    session.setDriverLogin(false);
+                }
+                else{
+                    session.setRegularLogin(false);
                 }
                 db.deleteUsers();
                 session.setFinished(true);
