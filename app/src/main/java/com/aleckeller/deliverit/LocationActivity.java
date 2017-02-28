@@ -115,6 +115,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
 
         specialRequest = false;
 
+        FirebaseMessaging.getInstance().subscribeToTopic("user_regular");
+
         //check if driver here
         HashMap<String,String> user = db.getUserDetails();
         String isDriver = user.get("driver");

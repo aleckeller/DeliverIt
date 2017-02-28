@@ -1,9 +1,12 @@
 package com.aleckeller.deliverit;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -121,7 +124,20 @@ public class CheckoutActivity extends AppCompatActivity {
         if (stringIsDriver.equals("TRUE")){
             isDriver = true;
         }
-        sendNotification(userName,placeAddress,userAddress,orderItems,amount,placeName,isDriver);
+        sendNotification(userName, placeAddress, userAddress, orderItems, amount, placeName, isDriver);
+        AlertDialog.Builder builder = new AlertDialog.Builder(CheckoutActivity.this);
+        builder.setTitle("DeliverIt")
+                .setMessage("Your order has been placed!" + "\n" + "You will be notified when your order has been accepted.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(CheckoutActivity.this, LocationActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     private void sendNotification(String userName, String placeAddress, String userAddress, String orderItems, String amount, String placeName, boolean isDriver) {

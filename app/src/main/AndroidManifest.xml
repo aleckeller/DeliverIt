@@ -28,7 +28,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".OrderNotificationActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name=".NotificationFromRegularActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name=".NotificationFromDriverActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".SpecialRequestActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".CheckoutActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".CreateAccountActivity" android:theme="@style/AppTheme" />
