@@ -30,7 +30,8 @@
         android:hint="Enter Order Here"
         android:minHeight="48dp"
         android:layout_toLeftOf="@+id/orderAmount"
-        android:layout_toStartOf="@+id/orderAmount">
+        android:layout_toStartOf="@+id/orderAmount"
+        android:inputType="textCapSentences">
 
         <requestFocus />
 

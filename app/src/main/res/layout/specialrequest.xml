@@ -42,7 +42,8 @@
             android:minWidth="200dp"
             android:minHeight="100dp"
             android:hint="Enter Item(s)"
-            android:maxWidth="200dp" />
+            android:maxWidth="200dp"
+            android:inputType="textCapSentences" />
 
         <EditText
             android:layout_width="wrap_content"
