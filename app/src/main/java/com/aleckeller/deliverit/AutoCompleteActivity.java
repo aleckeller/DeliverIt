@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -20,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -48,14 +50,28 @@ public class AutoCompleteActivity extends FragmentActivity implements GoogleApiC
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setHint("Address of Current Location");
-
+        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                .setCountry("US")
+                .build();
+        autocompleteFragment.setFilter(typeFilter);
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 latLng = place.getLatLng();
                 mAddress = String.valueOf(place.getAddress());
                 setLocation();
-                showAlertDialog();
+                Intent intent = getIntent();
+                boolean special = intent.getBooleanExtra("special",false);
+                if (special){
+                    String name = intent.getStringExtra("userName");
+                    Intent specIntent = new Intent(AutoCompleteActivity.this, SpecialRequestActivity.class);
+                    specIntent.putExtra("userAddress", mAddress);
+                    specIntent.putExtra("userName", name);
+                    startActivity(specIntent);
+                    finish();
+                }else{
+                    showAlertDialog();
+                }
             }
 
             @Override

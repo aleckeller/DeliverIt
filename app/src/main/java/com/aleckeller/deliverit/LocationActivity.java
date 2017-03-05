@@ -79,12 +79,33 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
             if (specialRequest){
-                Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
-                specIntent.putExtra("userAddress", mAddressOutput);
-                specIntent.putExtra("userName", getName());
-                Log.d(TAG,"Name:" + getName());
-                startActivity(specIntent);
-                finish();
+                AlertDialog.Builder addressBuilder = new AlertDialog.Builder(LocationActivity.this);
+                addressBuilder.setTitle("Is this your address?")
+                        .setMessage(mAddressOutput);
+                addressBuilder.setPositiveButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //MANUALLY ENTER ADDRESS
+                        Intent intent = new Intent(LocationActivity.this, AutoCompleteActivity.class);
+                        intent.putExtra("userName", getName());
+                        intent.putExtra("special",true);
+                        startActivity(intent);
+                        finish();
+                    }
+                });
+                addressBuilder.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent specIntent = new Intent(LocationActivity.this, SpecialRequestActivity.class);
+                        specIntent.putExtra("userAddress", mAddressOutput);
+                        specIntent.putExtra("userName", getName());
+                        Log.d(TAG, "Name:" + getName());
+                        startActivity(specIntent);
+                        finish();
+                    }
+                });
+                AlertDialog alert = addressBuilder.create();
+                alert.show();
             }else{
                 displayAddressOutput();
             }

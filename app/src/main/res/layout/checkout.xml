@@ -130,7 +130,9 @@
             android:layout_alignTop="@+id/linearLayout3"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginTop="200dp" />
+            android:layout_marginTop="200dp"
+            android:maxWidth="200dp"
+            android:textSize="20dp" />
     </LinearLayout>
 
     <TextView
@@ -176,6 +178,8 @@
         android:id="@+id/name"
         android:layout_below="@+id/linearLayout7"
         android:layout_alignRight="@+id/linearLayout8"
-        android:layout_alignEnd="@+id/linearLayout8" />
+        android:layout_alignEnd="@+id/linearLayout8"
+        android:textSize="20dp"
+        android:maxWidth="200dp" />
 
 </RelativeLayout>
