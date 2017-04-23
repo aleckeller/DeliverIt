@@ -110,6 +110,7 @@ public class NotificationFromDriverActivity extends AppCompatActivity {
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
         Intent intent = new Intent(NotificationFromDriverActivity.this, DriverActivity.class);
+        intent.putExtra("order",order);
         startActivity(intent);
         finish();
     }
